@@ -1,0 +1,17 @@
+|10000000 $4 @console-write
+
+|0100
+
+;hello-world ( -- addr )
+@loop
+DUP LB ( addr -- addr char )
+DUP ;done JZ
+;console-write SW ( addr char -- addr )
+INC ( addr -- addr' )
+;loop JMP
+
+@done ( addr -- )
+drop drop
+halt
+
+@hello-world "Hello, World!" .0A .00
