@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use crate::parser::Stmt;
 use fox_bytecode::*;
+use fox_bytecode::memory::RESET_VECTOR;
 
 struct Reference {
     label: String,
@@ -16,12 +17,10 @@ pub struct Assembler {
 }
 
 impl Assembler {
-    const BASE: usize = 0x100;
-
     pub fn new() -> Self {
         Self {
             data: Vec::new(),
-            index: Self::BASE,
+            index: RESET_VECTOR as _,
             length: 0,
             labels: HashMap::new(),
             references: Vec::new(),
@@ -87,7 +86,9 @@ impl Assembler {
     }
 
     pub fn data(&self) -> &[u8] {
-        &self.data[Self::BASE..Self::BASE+self.length]
+        let start = RESET_VECTOR as usize;
+        let end = start + self.length;
+        &self.data[start..end]
     }
 
     fn push_u8(&mut self, value: u8) {
@@ -96,7 +97,7 @@ impl Assembler {
         }
         self.data[self.index] = value;
         self.index += 1;
-        self.length = self.index - Self::BASE;
+        self.length = self.index - RESET_VECTOR as usize;
     }
 
     fn push_u32(&mut self, value: u32) {

@@ -57,7 +57,9 @@ pub fn parse(tokens: &[Token]) -> Ast {
             },
             Token::IdentifierOrNumber(str) => {
                 use std::str::FromStr;
-                let op = Opcode::from_str(str).unwrap();
+
+                //TODO rework this error handling here
+                let op = Opcode::from_str(str).expect(&format!("Could not parse {}", str));
                 ast.push(Stmt::Operation(op));
             },
             Token::String(value) => {

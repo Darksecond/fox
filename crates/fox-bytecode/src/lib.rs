@@ -1,3 +1,5 @@
+pub mod memory;
+
 pub const OP_HALT: u8 = 0x00;
 
 pub const OP_LITW: u8 = 0x10;

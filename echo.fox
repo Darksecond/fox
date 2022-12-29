@@ -1,0 +1,13 @@
+|10000000 @console-vector $4 @console-write $4 @console-read $4 @console-error
+|10010000 @system-vector $4 @system-exit
+
+|0100
+
+;on-console ;console-vector SW
+halt
+
+@on-console
+;console-read LB ( -- char )
+#20 SUB ( char -- char )
+;console-write SW
+halt

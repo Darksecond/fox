@@ -1,0 +1,9 @@
+pub const RESET_VECTOR  : u32 = 0x00000100;
+
+pub const CONSOLE_VECTOR: u32 = 0x10000000;
+pub const CONSOLE_WRITE : u32 = 0x10000004;
+pub const CONSOLE_READ  : u32 = 0x10000008;
+pub const CONSOLE_ERROR : u32 = 0x1000000C;
+
+pub const SYSTEM_VECTOR : u32 = 0x10010000;
+pub const SYSTEM_EXIT   : u32 = 0x10010004;

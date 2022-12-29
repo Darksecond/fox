@@ -1,8 +1,12 @@
-|10000000 $4 @console-write
+|10000000 @console-vector $4 @console-write $4 @console-read $4 @console-error
+|10010000 @system-vector $4 @system-exit
 
 |0100
 
-;hello-world ( -- addr )
+;hello-world ;print-str call
+#0 ;system-exit SW ( stop running, exit code 0 )
+
+@print-str
 @loop
 DUP LB ( addr -- addr char )
 DUP ;done JZ
@@ -12,6 +16,6 @@ INC ( addr -- addr' )
 
 @done ( addr -- )
 drop drop
-halt
+ret
 
 @hello-world "Hello, World!" .0A .00
