@@ -2,6 +2,8 @@ use fox_bytecode::*;
 
 /// Public way of interfacing directly with VirtualMachine memory.
 /// Use this through the `dma()` method, or by getting it as a parameter on read or write.
+/// This will **not** forward read and write requests to the machine, instead only accessing directly
+/// attached memory.
 pub struct DirectMemoryAccess<'a> {
     vm: &'a mut VirtualMachine,
 }
