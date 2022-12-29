@@ -8,7 +8,7 @@ pub trait Machine {
         self.write_u32(addr, value as _)
     }
     fn read_u8(&mut self, addr: u32) -> u8 {
-        self.read_u32(addr) as _
+        (self.read_u32(addr) & 0xFF) as _
     }
 }
 
@@ -138,24 +138,24 @@ impl VirtualMachine {
             let mut sp = self.mem.as_ptr().offset(SP_OFFSET as _) as *const u32;
             let mut rp = self.mem.as_ptr().offset(RP_OFFSET as _) as *const u32;
 
-            println!("IP: 0x{:08x}", self.ip.offset_from(ip));
-            println!("INST: 0x{:02x}", *self.ip);
+            eprintln!("IP: 0x{:08x}", self.ip.offset_from(ip));
+            eprintln!("INST: 0x{:02x}", *self.ip);
 
-            print!("SP: ");
+            eprint!("SP: ");
             while sp < self.sp as *const u32 {
-                print!("0x{:08x} ", *sp);
+                eprint!("0x{:08x} ", *sp);
                 sp = sp.offset(1);
             }
-            println!();
+            eprintln!();
 
-            print!("RP: ");
+            eprint!("RP: ");
             while rp < self.rp as *const u32 {
-                print!("0x{:08x} ", *rp);
+                eprint!("0x{:08x} ", *rp);
                 rp = rp.offset(1);
             }
-            println!();
+            eprintln!();
 
-            println!();
+            eprintln!();
         }
     }
 
@@ -193,7 +193,7 @@ impl VirtualMachine {
     }
 
     fn push(&mut self, value: u32) {
-        //todo add overflow check
+        //TODO add overflow check
         unsafe {
             *self.sp = value;
             self.sp = self.sp.offset(1);
