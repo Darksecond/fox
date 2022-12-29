@@ -1,14 +1,48 @@
 use fox_bytecode::*;
 
-pub trait Machine {
-    fn write_u32(&mut self, addr: u32, value: u32);
-    fn read_u32(&mut self, addr: u32) -> u32; 
+/// Public way of interfacing directly with VirtualMachine memory.
+/// Use this through the `dma()` method, or by getting it as a parameter on read or write.
+pub struct DirectMemoryAccess<'a> {
+    vm: &'a mut VirtualMachine,
+}
 
-    fn write_u8(&mut self, addr: u32, value: u8) {
-        self.write_u32(addr, value as _)
+impl<'a> DirectMemoryAccess<'a> {
+    pub fn read_u8(&self, addr: u32) -> u8 {
+        self.vm.mem[addr as usize]
     }
-    fn read_u8(&mut self, addr: u32) -> u8 {
-        (self.read_u32(addr) & 0xFF) as _
+
+    pub fn write_u8(&mut self, addr: u32, value: u8) {
+        self.vm.mem[addr as usize] = value;
+    }
+
+    pub fn read_u32(&self, addr: u32) -> u32 {
+        u32::from_le_bytes([
+               self.read_u8(addr + 0),
+               self.read_u8(addr + 1),
+               self.read_u8(addr + 2),
+               self.read_u8(addr + 3),
+        ])
+    }
+
+    pub fn write_u32(&mut self, addr: u32, value: u32) {
+        let [a,b,c,d] = u32::to_le_bytes(value);
+
+        self.write_u8(addr + 0, a);
+        self.write_u8(addr + 1, b);
+        self.write_u8(addr + 2, c);
+        self.write_u8(addr + 3, d);
+    }
+}
+
+pub trait Machine {
+    fn write_u32(&mut self, addr: u32, value: u32, dma: DirectMemoryAccess<'_>);
+    fn read_u32(&mut self, addr: u32, dma: DirectMemoryAccess<'_>) -> u32; 
+
+    fn write_u8(&mut self, addr: u32, value: u8, dma: DirectMemoryAccess<'_>) {
+        self.write_u32(addr, value as _, dma)
+    }
+    fn read_u8(&mut self, addr: u32, dma: DirectMemoryAccess<'_>) -> u8 {
+        (self.read_u32(addr, dma) & 0xFF) as _
     }
 }
 
@@ -40,6 +74,12 @@ impl VirtualMachine {
             ip,
             sp: sp as _,
             rp: rp as _,
+        }
+    }
+
+    pub fn dma(&mut self) -> DirectMemoryAccess<'_> {
+        DirectMemoryAccess {
+            vm: self,
         }
     }
 
@@ -168,7 +208,7 @@ impl VirtualMachine {
             self.mem[addr + 2] = c;
             self.mem[addr + 3] = d;
         } else {
-            machine.write_u32(addr, value);
+            machine.write_u32(addr, value, self.dma());
         }
     }
 
@@ -176,7 +216,7 @@ impl VirtualMachine {
         if addr < MEM_SIZE as _ {
             self.mem[addr as usize]
         } else {
-            machine.read_u8(addr)
+            machine.read_u8(addr, self.dma())
         }
     }
 

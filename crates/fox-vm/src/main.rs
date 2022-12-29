@@ -1,4 +1,4 @@
-use fox_vm::{VirtualMachine, Machine};
+use fox_vm::{VirtualMachine, Machine, DirectMemoryAccess};
 use fox_bytecode::memory::*;
 
 struct ConsoleMachine {
@@ -16,7 +16,7 @@ impl ConsoleMachine {
 }
 
 impl Machine for ConsoleMachine {
-    fn write_u32(&mut self, addr: u32, value: u32) {
+    fn write_u32(&mut self, addr: u32, value: u32, _dma: DirectMemoryAccess<'_>) {
         match addr {
             CONSOLE_VECTOR => {
                 self.console_vec = value;
@@ -40,7 +40,7 @@ impl Machine for ConsoleMachine {
         }
     }
 
-    fn read_u32(&mut self, addr: u32) -> u32 {
+    fn read_u32(&mut self, addr: u32, _dma: DirectMemoryAccess<'_>) -> u32 {
         match addr {
             CONSOLE_VECTOR => self.console_vec,
             CONSOLE_READ => self.console_read as _,
