@@ -34,6 +34,18 @@ impl<'a> DirectMemoryAccess<'a> {
         self.write_u8(addr + 2, c);
         self.write_u8(addr + 3, d);
     }
+
+    // Read nul-terminated string.
+    pub fn read_str(&self, addr: u32) -> String {
+        let str = unsafe {
+            let ptr = self.vm.mem.as_ptr().offset(addr as _);
+            //TODO replace this with the `until` version once that stabalizes.
+            std::ffi::CStr::from_ptr(ptr as _) 
+        };
+
+        let str = str.to_str().expect("String contains non UTF8 bytes");
+        str.to_string()
+    }
 }
 
 pub trait Machine {
