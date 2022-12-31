@@ -1,0 +1,25 @@
+
+|0100
+
+( Set width and height )
+#200 #10020004 SW
+#200 #10020008 SW
+
+#10020004 LW ( Load Width )
+#10020008 LW ( Load Height )
+MUL
+#2 DIV ( TODO Use Shift )
+
+#20000000 ADD ( Count -- EndAddr )
+#20000000 ( EndAddr -- End Start )
+
+@loop
+#33 OVER SB
+INC
+OVER OVER ( End Current -- End Current End' Current' )
+EQU ( End Current End' Current' -- End Current Cond )
+;loop JZ
+
+@done
+DBG DROP DROP
+halt

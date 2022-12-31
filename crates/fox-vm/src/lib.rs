@@ -1,3 +1,5 @@
+pub mod screen;
+
 use fox_bytecode::*;
 
 /// Public way of interfacing directly with VirtualMachine memory.
@@ -107,12 +109,12 @@ impl VirtualMachine {
         self.ip = unsafe { self.mem.as_ptr().offset(ip as _) };
 
         loop {
-            //TODO Add flag to enable/disable
-            //self.dump();
-
             match self.next_u8() {
                 OP_HALT => {
                     break;
+                },
+                OP_DBG => {
+                    self.dump();
                 },
 
                 OP_LITW => {
@@ -126,6 +128,12 @@ impl VirtualMachine {
                 OP_DROP => {
                     self.pop();
                 }
+                OP_OVER => {
+                    let b = self.pop();
+                    let a = self.peek();
+                    self.push(b);
+                    self.push(a);
+                },
                 OP_ADD => {
                     let b = self.pop();
                     let a = self.pop();
@@ -136,20 +144,53 @@ impl VirtualMachine {
                     let a = self.pop();
                     self.push(a.wrapping_sub(b));
                 },
+                OP_MUL => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    self.push(a.wrapping_mul(b));
+                }
+                OP_DIV => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    self.push(a.wrapping_div(b));
+                }
                 OP_INC => {
                     let a = self.pop();
                     self.push(a.wrapping_add(1));
                 }
 
+                OP_LW => {
+                    let addr = self.pop();
+                    let value = self.read_u32(addr, machine);
+                    self.push(value as _);
+                },
                 OP_SW => {
                     let addr = self.pop();
                     let value = self.pop();
                     self.write_u32(addr, value, machine);
                 },
+                OP_SB => {
+                    let addr = self.pop();
+                    let value = self.pop();
+                    self.write_u8(addr, (value & 0xFF) as u8, machine);
+                }
                 OP_LB => {
                     let addr = self.pop();
                     let value = self.read_u8(addr, machine);
                     self.push(value as _);
+                },
+
+                OP_EQU => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let out = if a == b { 1 } else { 0 };
+                    self.push(out);
+                },
+                OP_NEQ => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let out = if a != b { 1 } else { 0 };
+                    self.push(out);
                 },
 
                 OP_JMP => {
@@ -181,7 +222,7 @@ impl VirtualMachine {
                         self.ip = self.mem.as_mut_ptr().offset(addr as _);
                     }
                 }
-                x => unimplemented!("0x{:x}", x),
+                x => unimplemented!("0x{:02x}", x),
             }
         }
     }
@@ -193,7 +234,7 @@ impl VirtualMachine {
             let mut rp = self.mem.as_ptr().offset(RP_OFFSET as _) as *const u32;
 
             eprintln!("IP: 0x{:08x}", self.ip.offset_from(ip));
-            eprintln!("INST: 0x{:02x}", *self.ip);
+            //eprintln!("INST: 0x{:02x}", *self.ip);
 
             eprint!("SP: ");
             while sp < self.sp as *const u32 {
@@ -212,6 +253,19 @@ impl VirtualMachine {
             eprintln!();
         }
     }
+    fn read_u32(&mut self, addr: u32, machine: &mut dyn Machine) -> u32 {
+        if addr < MEM_SIZE as _ {
+            let addr = addr as usize;
+            u32::from_le_bytes([
+               self.mem[addr + 0],
+               self.mem[addr + 1],
+               self.mem[addr + 2],
+               self.mem[addr + 3],
+            ])
+        } else {
+            machine.read_u32(addr, self.dma())
+        }
+    }
 
     fn write_u32(&mut self, addr: u32, value: u32, machine: &mut dyn Machine) {
         if addr < MEM_SIZE as _ {
@@ -223,6 +277,15 @@ impl VirtualMachine {
             self.mem[addr + 3] = d;
         } else {
             machine.write_u32(addr, value, self.dma());
+        }
+    }
+
+    fn write_u8(&mut self, addr: u32, value: u8, machine: &mut dyn Machine) {
+        if addr < MEM_SIZE as _ {
+            let addr = addr as usize;
+            self.mem[addr] = value;
+        } else {
+            machine.write_u8(addr, value, self.dma());
         }
     }
 

@@ -1,6 +1,7 @@
 pub mod memory;
 
 pub const OP_HALT: u8 = 0x00;
+pub const OP_DBG : u8 = 0x01;
 
 pub const OP_LITW: u8 = 0x10;
 pub const OP_DUP : u8 = 0x11;
@@ -41,6 +42,7 @@ pub const OP_RPOP: u8 = 0x61;
 #[derive(Debug, Copy, Clone)]
 pub enum Opcode {
     Halt = OP_HALT,
+    Dbg = OP_DBG,
 
     LitW = OP_LITW,
     Dup = OP_DUP,
@@ -84,6 +86,7 @@ impl std::str::FromStr for Opcode {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "halt" => Ok(Opcode::Halt),
+            "dbg" => Ok(Opcode::Dbg),
 
             "litw" => Ok(Opcode::LitW),
             "dup" => Ok(Opcode::Dup),
