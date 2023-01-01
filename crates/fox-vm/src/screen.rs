@@ -154,6 +154,12 @@ impl Screen {
         let flags = dma.read_u32(addr + SCREEN_CMD_FLAGS);
         let layer = (flags & SCREEN_CMD_FLAGS_LAYER) as u8;
 
+        if (flags & SCREEN_CMD_FLAGS_CLEAR) == SCREEN_CMD_FLAGS_CLEAR {
+            // Clear screen instead of drawing sprite
+            self.layers[layer as usize].fill(0);
+            return;
+        }
+
         let mut index = 0;
         for y in y..y+8 {
             for i in 0..4 {

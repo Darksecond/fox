@@ -5,13 +5,28 @@
 ( Set width and height )
 #100 ;screen-width SW
 #100 ;screen-height SW
+;on-screen ;screen-vector SW
 
-#4 ;screen-cmd-length SW
+#5 ;screen-cmd-length SW
+;cmd-buf ;screen-cmd-addr SW
+HALT
+
+@on-screen
+;x LW
+INC
+DUP ;screen-width LW EQU
+;on-screen/done JZ
+DROP #0
+@on-screen/done
+;x SW
+
 ;cmd-buf ;screen-cmd-addr SW
 HALT
 
 @cmd-buf
-=00 ( X )
+=00 =00 =00 =20 ( Clear Layer )
+
+@x =00 ( X )
 =00 ( Y )
 :sprite
 =00000000 ( Flags )
