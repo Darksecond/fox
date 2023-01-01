@@ -2,6 +2,8 @@ use winit::window::{Window, WindowBuilder};
 use winit::dpi::LogicalSize;
 use winit::event_loop::EventLoopWindowTarget;
 use pixels::{SurfaceTexture, Pixels};
+use crate::DirectMemoryAccess;
+use fox_bytecode::memory::*;
 
 const PALETTE: [u32; 16] = [
     0x1a1c2c,
@@ -28,6 +30,7 @@ pub struct Screen {
     height: u32,
     layers: [Vec<u8>; 2],
     palette: [u32; 16],
+    cmd_length: u32,
 
     window: Option<Window>,
     pixels: Option<Pixels>,
@@ -44,6 +47,7 @@ impl Screen {
                 Vec::new(),
             ],
             palette: PALETTE,
+            cmd_length: 0,
 
             window: None,
             pixels: None,
@@ -110,7 +114,8 @@ impl Screen {
         let window = self.window.as_ref().unwrap();
         let pixels = self.pixels.as_mut().unwrap();
 
-        let size = LogicalSize::new(self.width as f64, self.height as f64);
+        let zoom = 1; //TODO make configurable
+        let size = LogicalSize::new((self.width * zoom) as f64, (self.height * zoom) as f64);
         window.set_min_inner_size(Some(size));
         window.set_max_inner_size(Some(size));
         window.set_inner_size(size);
@@ -125,12 +130,46 @@ impl Screen {
             self.layers[1].resize(size as _, 0);
         }
     }
+
+    fn set_pixel(&mut self, layer: u8, x: u32, y: u32, color: u8) {
+        if x >= self.width || y >= self.height { return; }
+
+        let color = color & 0x0F;
+        let index = y * (self.width/2) + (x/2);
+        let mut byte = self.layers[layer as usize][index as usize];
+        if x & 1 == 1 {
+            byte &= 0xF0;
+            byte |= color;
+        } else {
+            byte &= 0x0F;
+            byte |= color << 4;
+        }
+        self.layers[layer as usize][index as usize] = byte;
+    }
+
+    fn process_command(&mut self, addr: u32, dma: &mut DirectMemoryAccess<'_>) {
+        let x = dma.read_u32(addr + SCREEN_CMD_X);
+        let y = dma.read_u32(addr + SCREEN_CMD_Y);
+        let source = dma.read_u32(addr + SCREEN_CMD_SOURCE);
+        let flags = dma.read_u32(addr + SCREEN_CMD_FLAGS);
+        let layer = (flags & SCREEN_CMD_FLAGS_LAYER) as u8;
+
+        let mut index = 0;
+        for y in y..y+8 {
+            for i in 0..4 {
+                let byte = dma.read_u8(source + index);
+                let left = byte >> 4;
+                let right = byte & 0x0F;
+                self.set_pixel(layer, x+i*2+0, y, left);
+                self.set_pixel(layer, x+i*2+1, y, right);
+                index += 1;
+            }
+        }
+    }
 }
 
 impl Screen {
-    pub fn write_u32(&mut self, addr: u32, value: u32) {
-        use fox_bytecode::memory::*;
-
+    pub fn write_u32(&mut self, addr: u32, value: u32, mut dma: DirectMemoryAccess<'_>) {
         match addr {
             SCREEN_VECTOR => {
                 self.vector = value;
@@ -143,6 +182,14 @@ impl Screen {
                 self.height = u32::max(value, 8);
                 self.resize();
             },
+            SCREEN_CMD_LENGTH => {
+                self.cmd_length = value;
+            },
+            SCREEN_CMD_ADDR => {
+                for index in 0..self.cmd_length {
+                    self.process_command(value + index*16, &mut dma);
+                }
+            },
             SCREEN_PALETTE0..=SCREEN_PALETTE15 => {
                 let index = addr - SCREEN_PALETTE0;
                 self.palette[index as usize] = value;
@@ -152,8 +199,6 @@ impl Screen {
     }
 
     pub fn read_u32(&self, addr: u32) -> u32 {
-        use fox_bytecode::memory::*;
-
         match addr {
             SCREEN_VECTOR => {
                 self.vector
@@ -164,6 +209,9 @@ impl Screen {
             SCREEN_HEIGHT => {
                 self.height
             },
+            SCREEN_CMD_LENGTH => {
+                self.cmd_length
+            },
             SCREEN_PALETTE0..=SCREEN_PALETTE15 => {
                 let index = addr - SCREEN_PALETTE0;
                 self.palette[index as usize]
@@ -173,8 +221,6 @@ impl Screen {
     }
 
     pub fn write_u8(&mut self, addr: u32, value: u8) {
-        use fox_bytecode::memory::*;
-
         match addr {
             SCREEN_LAYER0..=SCREEN_LAYER0_TOP => {
                 let index = addr - SCREEN_LAYER0;
@@ -189,8 +235,6 @@ impl Screen {
     }
 
     pub fn read_u8(&self, addr: u32) -> u8 {
-        use fox_bytecode::memory::*;
-
         match addr {
             SCREEN_LAYER0..=SCREEN_LAYER0_TOP => {
                 let index = addr - SCREEN_LAYER0;

@@ -1,25 +1,42 @@
+|10020000 @screen-vector $4 @screen-width $4 @screen-height $4 @screen-cmd-length $4 @screen-cmd-addr $4 @screen-palette-base
 
 |0100
 
 ( Set width and height )
-#200 #10020004 SW
-#200 #10020008 SW
+#100 ;screen-width SW
+#100 ;screen-height SW
 
-#10020004 LW ( Load Width )
-#10020008 LW ( Load Height )
-MUL
-#2 DIV ( TODO Use Shift )
+#4 ;screen-cmd-length SW
+;cmd-buf ;screen-cmd-addr SW
+HALT
 
-#20000000 ADD ( Count -- EndAddr )
-#20000000 ( EndAddr -- End Start )
+@cmd-buf
+=00 ( X )
+=00 ( Y )
+:sprite
+=00000000 ( Flags )
 
-@loop
-#33 OVER SB
-INC
-OVER OVER ( End Current -- End Current End' Current' )
-EQU ( End Current End' Current' -- End Current Cond )
-;loop JZ
+=F8 ( X )
+=00000000 ( Y )
+:sprite
+=00000000 ( Flags )
 
-@done
-DBG DROP DROP
-halt
+=00 ( X )
+=F8 ( Y )
+:sprite
+=00000000 ( Flags )
+
+=F8 ( X )
+=F8 ( Y )
+:sprite
+=00000000 ( Flags )
+
+@sprite
+.33.33.33.33
+.31.11.11.13
+.31.11.11.13
+.31.11.11.13
+.31.11.11.13
+.31.11.11.13
+.31.11.11.13
+.33.33.33.33

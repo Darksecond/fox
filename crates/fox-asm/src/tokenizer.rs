@@ -9,6 +9,8 @@ pub enum Token {
     Ampersand,
     Period,
     Dollar,
+    Equal,
+    Colon,
 
     IdentifierOrNumber(String),
     String(String),
@@ -72,6 +74,8 @@ impl<'a> Lexer<'a> {
             ';' => Some(Token::Semicolon),
             '#' => Some(Token::Pound),
             '$' => Some(Token::Dollar),
+            '=' => Some(Token::Equal),
+            ':' => Some(Token::Colon),
             '.' => Some(Token::Period),
             ' ' => None,
             '\n' => None,

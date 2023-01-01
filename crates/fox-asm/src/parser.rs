@@ -11,6 +11,8 @@ pub enum Stmt {
     Operation(Opcode),
     String(String),
     RawByte(u8),
+    RawWord(u32),
+    RawReferenceAbsolute(String),
 }
 
 pub type Ast = Vec<Stmt>;
@@ -42,6 +44,10 @@ pub fn parse(tokens: &[Token]) -> Ast {
                 let str = parse_identifier(&mut it);
                 ast.push(Stmt::ReferenceAbsolute(str.to_string()));
             },
+            Token::Colon => {
+                let str = parse_identifier(&mut it);
+                ast.push(Stmt::RawReferenceAbsolute(str.to_string()));
+            },
             Token::Pound => {
                 let number = parse_number(&mut it);
                 ast.push(Stmt::LiteralWord(number));
@@ -54,6 +60,10 @@ pub fn parse(tokens: &[Token]) -> Ast {
             Token::Period => {
                 let number = parse_number(&mut it);
                 ast.push(Stmt::RawByte(number as _));
+            },
+            Token::Equal => {
+                let number = parse_number(&mut it);
+                ast.push(Stmt::RawWord(number));
             },
             Token::IdentifierOrNumber(str) => {
                 use std::str::FromStr;

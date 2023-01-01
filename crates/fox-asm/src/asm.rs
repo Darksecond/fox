@@ -67,6 +67,14 @@ impl Assembler {
 
                         self.push_u32(0);
                 },
+                Stmt::RawReferenceAbsolute(value) => {
+                        self.references.push(Reference {
+                            label: value.to_string(),
+                            index: self.index,
+                        });
+
+                        self.push_u32(0);
+                },
                 Stmt::Operation(value) => {
                     self.push_u8(*value as _);
                 },
@@ -77,6 +85,9 @@ impl Assembler {
                 },
                 Stmt::RawByte(value) => {
                     self.push_u8(*value);
+                },
+                Stmt::RawWord(value) => {
+                    self.push_u32(*value);
                 },
                 Stmt::OriginRelative(value) => {
                     self.index += *value as usize;

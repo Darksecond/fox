@@ -48,6 +48,13 @@ impl<'a> DirectMemoryAccess<'a> {
         let str = str.to_str().expect("String contains non UTF8 bytes");
         str.to_string()
     }
+
+    pub fn read(&self, addr: u32, buf: &mut [u8]) {
+        let start = addr as usize;
+        let end = start + buf.len();
+        let source = &self.vm.mem[start..end];
+        buf.copy_from_slice(source);
+    }
 }
 
 pub trait Machine {

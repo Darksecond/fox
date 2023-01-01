@@ -24,7 +24,7 @@ const fn is_screen_addr(addr: u32) -> bool {
 }
 
 impl Machine for ScreenMachine {
-    fn write_u32(&mut self, addr: u32, value: u32, _dma: DirectMemoryAccess<'_>) {
+    fn write_u32(&mut self, addr: u32, value: u32, dma: DirectMemoryAccess<'_>) {
         match addr {
             SYSTEM_EXIT => {
                 self.system_exit = Some(value);
@@ -42,7 +42,7 @@ impl Machine for ScreenMachine {
                 std::io::stderr().flush().unwrap();
             },
             _ if is_screen_addr(addr) => {
-                self.screen.write_u32(addr, value);
+                self.screen.write_u32(addr, value, dma);
             },
             _ => unimplemented!(),
         }
