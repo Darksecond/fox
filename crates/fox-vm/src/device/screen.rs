@@ -4,6 +4,7 @@ use winit::event_loop::EventLoopWindowTarget;
 use pixels::{SurfaceTexture, Pixels};
 use crate::DirectMemoryAccess;
 use fox_bytecode::memory::*;
+use super::Device;
 
 const PALETTE: [u32; 16] = [
     0x1a1c2c,
@@ -24,34 +25,44 @@ const PALETTE: [u32; 16] = [
     0x333c57,
 ];
 
-pub struct Screen {
+pub struct ScreenDevice {
     pub vector: u32,
     width: u32,
     height: u32,
     layers: [Vec<u8>; 2],
     palette: [u32; 16],
     cmd_length: u32,
+    zoom: u32,
 
     window: Option<Window>,
     pixels: Option<Pixels>,
 }
 
-impl Screen {
+impl ScreenDevice {
     pub fn new() -> Self {
         Self {
             vector: 0,
-            width: 64*8,
-            height: 40*8,
+            width: 64 * 8,
+            height: 40 * 8,
             layers: [
                 Vec::new(),
                 Vec::new(),
             ],
             palette: PALETTE,
             cmd_length: 0,
+            zoom: 1,
 
             window: None,
             pixels: None,
         }
+    }
+
+    pub fn position(&self, position: winit::dpi::PhysicalPosition<f64>) -> (u32, u32) {
+        let scale = self.window.as_ref().unwrap().scale_factor();
+        let position = position.to_logical::<f64>(scale);
+        let x = (position.x / 2.0) as u32;
+        let y = (position.y / 2.0) as u32;
+        (x, y)
     }
 
     pub fn init(&mut self, event_loop: &EventLoopWindowTarget<()>) {
@@ -114,8 +125,7 @@ impl Screen {
         let window = self.window.as_ref().unwrap();
         let pixels = self.pixels.as_mut().unwrap();
 
-        let zoom = 1; //TODO make configurable
-        let size = LogicalSize::new((self.width * zoom) as f64, (self.height * zoom) as f64);
+        let size = LogicalSize::new((self.width * self.zoom) as f64, (self.height * self.zoom) as f64);
         window.set_min_inner_size(Some(size));
         window.set_max_inner_size(Some(size));
         window.set_inner_size(size);
@@ -174,8 +184,8 @@ impl Screen {
     }
 }
 
-impl Screen {
-    pub fn write_u32(&mut self, addr: u32, value: u32, mut dma: DirectMemoryAccess<'_>) {
+impl Device for ScreenDevice {
+    fn write_u32(&mut self, addr: u32, value: u32, mut dma: DirectMemoryAccess<'_>) {
         match addr {
             SCREEN_VECTOR => {
                 self.vector = value;
@@ -196,6 +206,10 @@ impl Screen {
                     self.process_command(value + index*16, &mut dma);
                 }
             },
+            SCREEN_ZOOM => {
+                self.zoom = u32::max(value, 1);
+                self.resize();
+            }
             SCREEN_PALETTE0..=SCREEN_PALETTE15 => {
                 let index = addr - SCREEN_PALETTE0;
                 self.palette[index as usize] = value;
@@ -204,7 +218,7 @@ impl Screen {
         }
     }
 
-    pub fn read_u32(&self, addr: u32) -> u32 {
+    fn read_u32(&mut self, addr: u32, _dma: DirectMemoryAccess<'_>) -> u32 {
         match addr {
             SCREEN_VECTOR => {
                 self.vector
@@ -218,6 +232,9 @@ impl Screen {
             SCREEN_CMD_LENGTH => {
                 self.cmd_length
             },
+            SCREEN_ZOOM => {
+                self.zoom
+            },
             SCREEN_PALETTE0..=SCREEN_PALETTE15 => {
                 let index = addr - SCREEN_PALETTE0;
                 self.palette[index as usize]
@@ -226,7 +243,7 @@ impl Screen {
         }
     }
 
-    pub fn write_u8(&mut self, addr: u32, value: u8) {
+    fn write_u8(&mut self, addr: u32, value: u8, _dma: DirectMemoryAccess<'_>) {
         match addr {
             SCREEN_LAYER0..=SCREEN_LAYER0_TOP => {
                 let index = addr - SCREEN_LAYER0;
@@ -240,7 +257,7 @@ impl Screen {
         }
     }
 
-    pub fn read_u8(&self, addr: u32) -> u8 {
+    fn read_u8(&mut self, addr: u32, _dma: DirectMemoryAccess<'_>) -> u8 {
         match addr {
             SCREEN_LAYER0..=SCREEN_LAYER0_TOP => {
                 let index = addr - SCREEN_LAYER0;

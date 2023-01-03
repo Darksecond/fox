@@ -34,6 +34,7 @@ pub const OP_JMP : u8 = 0x50;
 pub const OP_JZ  : u8 = 0x51;
 pub const OP_CALL: u8 = 0x52;
 pub const OP_RET : u8 = 0x53;
+pub const OP_JNZ : u8 = 0x54;
 
 pub const OP_RPUSH: u8 = 0x60;
 pub const OP_RPOP: u8 = 0x61;
@@ -75,6 +76,7 @@ pub enum Opcode {
     Jz = OP_JZ,
     Call = OP_CALL,
     Ret = OP_RET,
+    Jnz = OP_JNZ,
 
     Rpush = OP_RPUSH,
     Rpop = OP_RPOP,
@@ -119,6 +121,7 @@ impl std::str::FromStr for Opcode {
             "jz" => Ok(Opcode::Jz),
             "call" => Ok(Opcode::Call),
             "ret" => Ok(Opcode::Ret),
+            "jnz" => Ok(Opcode::Jnz),
 
             "rpush" => Ok(Opcode::Rpush),
             "rpop" => Ok(Opcode::Rpop),

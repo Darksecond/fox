@@ -1,67 +1,75 @@
 use fox_vm::{VirtualMachine, Machine, DirectMemoryAccess};
 use fox_bytecode::memory::*;
+use fox_vm::device::{Device, match_device, FileDevice, SystemDevice, ConsoleDevice};
 
 struct ConsoleMachine {
-    console_vec: u32,
-    console_read: u8,
+    console: ConsoleDevice,
+    system: SystemDevice,
+    file0: FileDevice,
+    file1: FileDevice,
 }
 
 impl ConsoleMachine {
+    const DEVICES: [(u32, u32); 4] = [
+        (SYSTEM_BASE , DEVICE_LENGTH), // 0
+        (CONSOLE_BASE, DEVICE_LENGTH), // 1
+        (FILE0_BASE  , DEVICE_LENGTH), // 2
+        (FILE1_BASE  , DEVICE_LENGTH), // 3
+    ];
+
+    fn device(&mut self, num: u32) -> &mut dyn Device {
+        match num {
+            0 => &mut self.system,
+            1 => &mut self.console,
+            2 => &mut self.file0,
+            3 => &mut self.file1,
+            _ => unimplemented!(),
+        }
+    }
+
     pub fn new() -> Self {
         Self {
-            console_vec: 0,
-            console_read: 0,
+            console: ConsoleDevice::new(),
+            system: SystemDevice::new(),
+            file0: FileDevice::new(FILE0_BASE),
+            file1: FileDevice::new(FILE1_BASE),
         }
     }
 }
 
 impl Machine for ConsoleMachine {
-    fn write_u32(&mut self, addr: u32, value: u32, _dma: DirectMemoryAccess<'_>) {
-        match addr {
-            CONSOLE_VECTOR => {
-                self.console_vec = value;
-            },
-            CONSOLE_WRITE => {
-                use std::io::Write;
-
-                print!("{}", value as u8 as char);
-                std::io::stdout().flush().unwrap();
-            },
-            CONSOLE_ERROR => {
-                use std::io::Write;
-
-                eprint!("{}", value as u8 as char);
-                std::io::stderr().flush().unwrap();
-            },
-            SYSTEM_EXIT => {
-                std::process::exit(value as _);
-            }
-            _ => unimplemented!(),
-        }
+    fn write_u32(&mut self, addr: u32, value: u32, dma: DirectMemoryAccess<'_>) {
+        let device = self.device(match_device(Self::DEVICES, addr));
+        device.write_u32(addr, value, dma)
     }
 
-    fn read_u32(&mut self, addr: u32, _dma: DirectMemoryAccess<'_>) -> u32 {
-        match addr {
-            CONSOLE_VECTOR => self.console_vec,
-            CONSOLE_READ => self.console_read as _,
-            _ => unimplemented!(),
-        }
+    fn read_u32(&mut self, addr: u32, dma: DirectMemoryAccess<'_>) -> u32 {
+        let device = self.device(match_device(Self::DEVICES, addr));
+        device.read_u32(addr, dma)
+    }
+
+    fn write_u8(&mut self, addr: u32, value: u8, dma: DirectMemoryAccess<'_>) {
+        let device = self.device(match_device(Self::DEVICES, addr));
+        device.write_u8(addr, value, dma)
+    }
+
+    fn read_u8(&mut self, addr: u32, dma: DirectMemoryAccess<'_>) -> u8 {
+        let device = self.device(match_device(Self::DEVICES, addr));
+        device.read_u8(addr, dma)
     }
 }
 
 fn main() {
     let args: Vec<_> = std::env::args().collect();
-    if args.len() != 2 {
-        eprintln!("Must have 1 argument");
+    if args.len() < 2 {
+        eprintln!("Must have at least 1 argument");
         return;
     }
 
-    let mut stdin = std::io::stdin().lock();
-
     let mut machine = ConsoleMachine::new();
-
     let mut vm = VirtualMachine::new();
 
+    // Load rom
     {
         let data = std::fs::read(&args[1]).unwrap();
         vm.load(&data);
@@ -70,13 +78,14 @@ fn main() {
     vm.run(&mut machine, RESET_VECTOR);
 
     loop {
-        use std::io::Read;
-        let mut buf = [0;1];
-        if stdin.read(&mut buf).unwrap() > 0 {
-            machine.console_read = buf[0];
-            let vec = machine.console_vec;
-            if vec != 0 {
-                vm.run(&mut machine, vec);
+        if let Some(exit) = machine.system.exit {
+            std::process::exit(exit as _);
+        }
+
+        if machine.console.read_block() {
+            let vector = machine.console.vector;
+            if vector != 0 {
+                vm.run(&mut machine, vector);
             }
         }
     }

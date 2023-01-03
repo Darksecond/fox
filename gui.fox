@@ -1,11 +1,13 @@
-|10020000 @screen-vector $4 @screen-width $4 @screen-height $4 @screen-cmd-length $4 @screen-cmd-addr $4 @screen-palette-base
+|10020000 @screen-vector $4 @screen-width $4 @screen-height $4 @screen-cmd-length $4 @screen-cmd-addr $4 @screen-zoom $4 @screen-palette-base
 
 |0100
 
+@main
 ( Set width and height )
-#100 ;screen-width SW
-#100 ;screen-height SW
-;on-screen ;screen-vector SW
+#100 ;screen-width SW ( Width )
+#100 ;screen-height SW ( Height )
+#2 ; screen-zoom SW ( Zoom )
+;on-screen ;screen-vector SW ( Vector )
 
 #5 ;screen-cmd-length SW
 ;cmd-buf ;screen-cmd-addr SW

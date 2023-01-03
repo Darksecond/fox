@@ -1,0 +1,158 @@
+|10020000 @screen-vector $4 @screen-width $4 @screen-height $4 @screen-cmd-length $4 @screen-cmd-addr $4 @screen-zoom $4 @screen-palette-base
+|10050000 @mouse-vector $4 @mouse-x $4 @mouse-y $4 @mouse-flags $4 @mouse-button
+
+|00 @button-last
+
+|0100
+#80 ;screen-width SW ( Width )
+#80 ;screen-height SW ( Height )
+#2 ; screen-zoom SW ( Zoom )
+
+;on-mouse ;mouse-vector SW
+
+#A ;screen-cmd-length SW
+;cmd-buf ;screen-cmd-addr SW
+halt
+
+@on-mouse
+;mouse-button LW ( -- button )
+;button-last LW ( button -- button last )
+EQU ( button last -- cond )
+;on-mouse/done JNZ
+;mouse-button LW ( -- button )
+#1 EQU ;on-mouse/done JZ
+
+;button0 ;button-pressed CALL
+;button1 ;button-pressed CALL
+;button2 ;button-pressed CALL
+;button3 ;button-pressed CALL
+;button4 ;button-pressed CALL
+;button5 ;button-pressed CALL
+;button6 ;button-pressed CALL
+;button7 ;button-pressed CALL
+;cmd-buf ;screen-cmd-addr SW
+
+@on-mouse/done
+;mouse-button LW ;button-last SW
+halt
+
+@in-range ( addr -- cond )
+DUP LW ( addr -- addr X )
+DUP ;mouse-x LW LT ( addr X -- addr X cond )
+SWAP #8 ADD ( addr X cond -- addr cond X' )
+;mouse-x LW GT ( addr cond X' -- addr cond cond )
+AND ( addr cond cond -- addr cond )
+
+SWAP #4 ADD LW DUP ( addr cond -- cond Y Y )
+;mouse-y LW
+LT SWAP ( cond Y Y mY -- cond cond Y )
+#8 ADD ;mouse-y LW GT ( cond cond Y -- cond cond cond )
+AND AND
+RET
+
+@toggle ( addr -- )
+#8 ADD ( addr -- addr' )
+DUP LW ( addr' -- addr' sprite )
+;sprite-off EQU ;toggle/turn-on JNZ
+( Turn off )
+;sprite-off SWAP SW
+;toggle/done JMP
+@toggle/turn-on
+;sprite-on SWAP SW
+( Turn on )
+@toggle/done
+RET
+
+@button-pressed ( addr -- )
+DUP ;in-range CALL ( addr -- addr cond )
+;button-pressed/done JZ
+DUP ;toggle CALL ( addr -- addr )
+@button-pressed/done
+DROP
+RET
+
+@cmd-buf
+=00 =00 =00 =20 ( Clear Layer )
+
+=20 ( X )
+=20 ( Y )
+:sprite-test
+=00 ( Flags )
+
+@button0
+=10 ( X )
+=10 ( Y )
+:sprite-off
+=00 ( Flags )
+
+@button1
+=19 ( X )
+=10 ( Y )
+:sprite-off
+=00 ( Flags )
+
+@button2
+=22 ( X )
+=10 ( Y )
+:sprite-off
+=00 ( Flags )
+
+@button3
+=2B ( X )
+=10 ( Y )
+:sprite-off
+=00 ( Flags )
+
+@button4
+=34 ( X )
+=10 ( Y )
+:sprite-off
+=00 ( Flags )
+
+@button5
+=3D ( X )
+=10 ( Y )
+:sprite-off
+=00 ( Flags )
+
+@button6
+=46 ( X )
+=10 ( Y )
+:sprite-off
+=00 ( Flags )
+
+@button7
+=4F ( X )
+=10 ( Y )
+:sprite-off
+=00 ( Flags )
+
+@sprite-off
+.0F.0F.0F.0F
+.00.00.00.00
+.0F.00.00.0F
+.00.0F.FF.00
+.0F.0F.FF.0F
+.00.00.00.00
+.0F.0F.0F.0F
+.00.00.00.00
+
+@sprite-on
+.03.33.33.33
+.03.00.00.03
+.03.03.33.03
+.03.03.33.03
+.03.00.00.03
+.03.00.00.03
+.03.33.33.33
+.00.00.00.00
+
+@sprite-test
+.0A.AA.AA.AA
+.0A.00.00.0A
+.0A.0A.AA.0A
+.0A.0A.AA.0A
+.0A.0A.AA.0A
+.0A.00.00.0A
+.0A.AA.AA.AA
+.00.00.00.00

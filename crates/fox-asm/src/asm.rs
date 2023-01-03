@@ -3,6 +3,7 @@ use crate::parser::Stmt;
 use fox_bytecode::*;
 use fox_bytecode::memory::RESET_VECTOR;
 
+#[derive(Debug)]
 struct Reference {
     label: String,
     index: usize,
@@ -32,7 +33,10 @@ impl Assembler {
 
         // Resolve references
         for reference in &self.references {
-            let index = self.labels[&reference.label];
+            let index = match self.labels.get(&reference.label) {
+                Some(index) => index,
+                None => panic!("Unknown label {}", &reference.label),
+            };
 
             let [a,b,c,d] = index.to_le_bytes();
             self.data[reference.index + 0] = a;

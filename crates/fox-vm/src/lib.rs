@@ -1,4 +1,4 @@
-pub mod screen;
+pub mod device;
 
 use fox_bytecode::*;
 
@@ -37,11 +37,11 @@ impl<'a> DirectMemoryAccess<'a> {
         self.write_u8(addr + 3, d);
     }
 
-    // Read nul-terminated string.
+    /// Read nul-terminated string.
     pub fn read_str(&self, addr: u32) -> String {
         let str = unsafe {
             let ptr = self.vm.mem.as_ptr().offset(addr as _);
-            //TODO replace this with the `until` version once that stabalizes.
+            //TODO replace this with the `until` version once that stabilizes.
             std::ffi::CStr::from_ptr(ptr as _) 
         };
 
@@ -49,11 +49,24 @@ impl<'a> DirectMemoryAccess<'a> {
         str.to_string()
     }
 
+    /// Write nul-terminated string.
+    pub fn write_str(&mut self, addr: u32, value: &str) {
+        self.write(addr, value.as_bytes());
+        self.write_u8(addr + value.len() as u32, 0);
+    }
+
     pub fn read(&self, addr: u32, buf: &mut [u8]) {
         let start = addr as usize;
         let end = start + buf.len();
         let source = &self.vm.mem[start..end];
         buf.copy_from_slice(source);
+    }
+
+    pub fn write(&mut self, addr: u32, buf: &[u8]) {
+        let start = addr as usize;
+        let end = start + buf.len();
+        let dest = &mut self.vm.mem[start..end];
+        dest.copy_from_slice(buf);
     }
 }
 
@@ -113,6 +126,10 @@ impl VirtualMachine {
     }
 
     pub fn run(&mut self, machine: &mut dyn Machine, ip: u32) {
+        if ip == 0 {
+            return;
+        }
+
         self.ip = unsafe { self.mem.as_ptr().offset(ip as _) };
 
         loop {
@@ -135,6 +152,12 @@ impl VirtualMachine {
                 OP_DROP => {
                     self.pop();
                 }
+                OP_SWAP => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    self.push(b);
+                    self.push(a);
+                },
                 OP_OVER => {
                     let b = self.pop();
                     let a = self.peek();
@@ -160,6 +183,11 @@ impl VirtualMachine {
                     let b = self.pop();
                     let a = self.pop();
                     self.push(a.wrapping_div(b));
+                }
+                OP_AND => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    self.push(a & b);
                 }
                 OP_INC => {
                     let a = self.pop();
@@ -193,6 +221,18 @@ impl VirtualMachine {
                     let out = if a == b { 1 } else { 0 };
                     self.push(out);
                 },
+                OP_GT => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let out = if a > b { 1 } else { 0 };
+                    self.push(out);
+                },
+                OP_LT => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let out = if a < b { 1 } else { 0 };
+                    self.push(out);
+                },
                 OP_NEQ => {
                     let b = self.pop();
                     let a = self.pop();
@@ -210,6 +250,15 @@ impl VirtualMachine {
                     let addr = self.pop();
                     let cond = self.pop();
                     if cond == 0 {
+                        unsafe {
+                            self.ip = self.mem.as_mut_ptr().offset(addr as _);
+                        }
+                    }
+                },
+                OP_JNZ => {
+                    let addr = self.pop();
+                    let cond = self.pop();
+                    if cond != 0 {
                         unsafe {
                             self.ip = self.mem.as_mut_ptr().offset(addr as _);
                         }
