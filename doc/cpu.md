@@ -5,6 +5,8 @@ It's a 32-bit system with native 32-bit words.
 
 ## Opcodes
 
+### Table 
+
 |      | 0     | 1    | 2     | 3     | 4    | 5    | 6    | 7    | 8    | 9    | A    | B    | C    | D    | E    | F    |
 | ---- | ----- | ---- | ----- | ----- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
 | 0    | HALT  | DBG  |       |       |      |      |      |      |      |      |      |      |      |      |      |      |
@@ -23,3 +25,13 @@ It's a 32-bit system with native 32-bit words.
 | D    |       |      |       |       |      |      |      |      |      |      |      |      |      |      |      |      |
 | E    |       |      |       |       |      |      |      |      |      |      |      |      |      |      |      |      |
 | F    |       |      |       |       |      |      |      |      |      |      |      |      |      |      |      |      |
+
+### Detailed explanations
+#### HALT (`0x00`)
+This will halt the CPU waiting for a vector to trigger.
+
+#### DBG (`0x01`)
+This will debug print the contents of the stack and return stack.
+
+#### LITW (`0x10`)
+This will read the next 4 bytes in little-endian format and put the value on the stack.
