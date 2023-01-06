@@ -1,9 +1,12 @@
 [package]
-name = "fox-vm"
+name = "fox-sw"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+fox-vm = { path = "../fox-vm" }
 fox-bytecode = { path = "../fox-bytecode" }
+softbuffer = "0.1.1"
+winit = "0.27.5"

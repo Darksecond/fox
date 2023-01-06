@@ -370,6 +370,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fastrand"
+version = "1.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7a407cfaa3385c4ae6b23e84623d48c2798d06e3e6a1878f7f59f17b3f86499"
+dependencies = [
+ "instant",
+]
+
+[[package]]
 name = "flate2"
 version = "1.0.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -428,6 +437,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
 
 [[package]]
+name = "fox"
+version = "0.1.0"
+dependencies = [
+ "fox-bytecode",
+ "fox-vm",
+ "pixels",
+ "winit",
+]
+
+[[package]]
 name = "fox-asm"
 version = "0.1.0"
 dependencies = [
@@ -439,12 +458,28 @@ name = "fox-bytecode"
 version = "0.1.0"
 
 [[package]]
+name = "fox-cli"
+version = "0.1.0"
+dependencies = [
+ "fox-bytecode",
+ "fox-vm",
+]
+
+[[package]]
+name = "fox-sw"
+version = "0.1.0"
+dependencies = [
+ "fox-bytecode",
+ "fox-vm",
+ "softbuffer",
+ "winit",
+]
+
+[[package]]
 name = "fox-vm"
 version = "0.1.0"
 dependencies = [
  "fox-bytecode",
- "pixels",
- "winit",
 ]
 
 [[package]]
@@ -1028,6 +1063,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "remove_dir_all"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3acd125665422973a33ac9d3dd2df85edad0f4ae9b00dafb1a05e43a9f5ef8e7"
+dependencies = [
+ "winapi",
+]
+
+[[package]]
 name = "renderdoc-sys"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1154,6 +1198,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "softbuffer"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d1cda310762a78016e0bcb9f21b9f6c288858941eab798443c19d8f77cde68a"
+dependencies = [
+ "cocoa",
+ "core-graphics",
+ "foreign-types 0.3.2",
+ "objc",
+ "raw-window-handle 0.4.3",
+ "tempfile",
+ "thiserror",
+ "wasm-bindgen",
+ "wayland-client",
+ "web-sys",
+ "winapi",
+ "x11-dl",
+]
+
+[[package]]
 name = "spirv"
 version = "0.2.0+1.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1184,6 +1248,20 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "tempfile"
+version = "3.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5cdb1ef4eaeeaddc8fbd371e5017057064af0911902ef36b39801f67cc6d79e4"
+dependencies = [
+ "cfg-if",
+ "fastrand",
+ "libc",
+ "redox_syscall",
+ "remove_dir_all",
+ "winapi",
 ]
 
 [[package]]

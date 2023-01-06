@@ -29,35 +29,49 @@ pub const SYSTEM_EXIT   : u32 = 0x0004;
 /// If there are no more arguments this will return '0' continuously.
 pub const SYSTEM_READ   : u32 = 0x0008;
 
+
 // -- SCREEN DEVICE --
-pub const SCREEN_VECTOR    : u32 = 0x10020000;
-pub const SCREEN_WIDTH     : u32 = 0x10020004;
-pub const SCREEN_HEIGHT    : u32 = 0x10020008;
-pub const SCREEN_CMD_LENGTH: u32 = 0x1002000C;
-pub const SCREEN_CMD_ADDR  : u32 = 0x10020010;
-pub const SCREEN_ZOOM      : u32 = 0x10020014;
-pub const SCREEN_PALETTE0  : u32 = 0x10020018;
-pub const SCREEN_PALETTE15 : u32 = 0x10020054;
+pub mod screen {
+    pub const VECTOR    : u32 = 0x10020000;
+    pub const WIDTH     : u32 = 0x10020004;
+    pub const HEIGHT    : u32 = 0x10020008;
+    pub const CMD_LENGTH: u32 = 0x1002000C;
+    pub const CMD_ADDR  : u32 = 0x10020010;
+    pub const ZOOM      : u32 = 0x10020014;
+    pub const PALETTE0  : u32 = 0x10020018;
+    pub const PALETTE15 : u32 = 0x10020054;
 
-pub const SCREEN_LAYER0    : u32 = 0x20000000;
-pub const SCREEN_LAYER0_TOP: u32 = SCREEN_LAYER0+SCREEN_LAYER_LENGTH-1;
-pub const SCREEN_LAYER1    : u32 = 0x20080000;
-pub const SCREEN_LAYER1_TOP: u32 = SCREEN_LAYER1+SCREEN_LAYER_LENGTH-1;
+    pub const LAYER0    : u32 = 0x20000000;
+    pub const LAYER0_TOP: u32 = LAYER0 + super::SCREEN_LAYER_LENGTH-1;
+    pub const LAYER1    : u32 = 0x20080000;
+    pub const LAYER1_TOP: u32 = LAYER1 + super::SCREEN_LAYER_LENGTH-1;
 
-// -- SCREEN SPRITE COMMAND --
-pub const SCREEN_CMD_X     : u32 = 0x0;
-pub const SCREEN_CMD_Y     : u32 = 0x4;
-pub const SCREEN_CMD_SOURCE: u32 = 0x8;
-pub const SCREEN_CMD_FLAGS : u32 = 0xC;
+    // -- SCREEN SPRITE COMMAND --
+    pub mod command {
+        pub const X      : u32 = 0x0;
+        pub const Y      : u32 = 0x4;
+        pub const SOURCE : u32 = 0x8;
+        /// Command & Layer
+        pub const COMMAND: u32 = 0xC;
+        pub const FLAGS  : u32 = 0xD;
+        /// Foreground & Background
+        pub const COLOR  : u32 = 0xE;
+        /// Width & Height
+        pub const REPEAT : u32 = 0xF;
 
-pub const SCREEN_CMD_FLAGS_LAYER  : u32 = 0b000011; //2 bits
-pub const SCREEN_CMD_FLAGS_FLIP_X : u32 = 0b000100;
-pub const SCREEN_CMD_FLAGS_FLIP_Y : u32 = 0b001000;
-pub const SCREEN_CMD_FLAGS_FLIP_XY: u32 = 0b010000;
-/// Clear layer instead of drawing sprite
-pub const SCREEN_CMD_FLAGS_CLEAR  : u32 = 0b100000;
-//TODO Flag for "don't touch transparent pixels (treat 0 as skip kinda thing)"
+        /// Clear layer
+        pub const COMMAND_CLEAR  : u32 = 0x00;
+        /// 1bpp Sprite
+        pub const COMMAND_SPRITE1: u32 = 0x01;
+        /// 4bpp Sprite
+        pub const COMMAND_SPRITE4: u32 = 0x02;
 
+        pub const FLAGS_FLIP_X    : u32 = 0x01;
+        pub const FLAGS_FLIP_Y    : u32 = 0x02;
+        pub const FLAGS_FLIP_XY   : u32 = 0x04;
+        pub const FLAGS_SKIP_CLEAR: u32 = 0x08;
+    }
+}
 
 // -- FILE DEVICE --
 // All of these are relative.

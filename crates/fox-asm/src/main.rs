@@ -4,12 +4,16 @@ mod asm;
 
 fn main() {
     let args: Vec<_> = std::env::args().collect();
-    if args.len() != 3 {
-        println!("Expected 2 arguments");
+    if args.len() != 2 {
+        println!("Expected 1 argument");
         return;
     }
 
-    let input = std::fs::read_to_string(&args[1]).unwrap();
+    let input_filename = std::path::Path::new(&args[1]);
+    let output_filename = input_filename.with_extension("bin");
+    println!("Writing to {}", output_filename.display());
+
+    let input = std::fs::read_to_string(input_filename).unwrap();
 
     let tokens = tokenizer::tokenize(&input);
     let ast = parser::parse(&tokens);
@@ -21,5 +25,5 @@ fn main() {
     //println!("{:x?}", ast);
     //println!("Asm: {:x?}", asm.data());
 
-    std::fs::write(&args[2], asm.data()).unwrap();
+    std::fs::write(output_filename, asm.data()).unwrap();
 }

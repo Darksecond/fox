@@ -7,7 +7,9 @@ pub enum Stmt {
     OriginRelative(u32),
     LiteralWord(u32),
     LabelAbsolute(String),
+    LocalLabelAbsolute(String),
     ReferenceAbsolute(String),
+    LocalReferenceAbsolute(String),
     Operation(Opcode),
     String(String),
     RawByte(u8),
@@ -32,7 +34,7 @@ fn parse_number<'a>(it: &mut impl Iterator<Item=&'a Token>) -> u32 {
 
 pub fn parse(tokens: &[Token]) -> Ast {
     let mut ast = Vec::new();
-    let mut it = tokens.iter();
+    let mut it = tokens.iter().peekable();
 
     while let Some(token) = it.next() {
         match token {
@@ -41,8 +43,14 @@ pub fn parse(tokens: &[Token]) -> Ast {
                 ast.push(Stmt::LabelAbsolute(str.to_string()));
             },
             Token::Semicolon => {
-                let str = parse_identifier(&mut it);
-                ast.push(Stmt::ReferenceAbsolute(str.to_string()));
+                if let Some(Token::Ampersand) = it.peek() {
+                    it.next(); // Eat Ampersand
+                    let str = parse_identifier(&mut it);
+                    ast.push(Stmt::LocalReferenceAbsolute(str.to_string()));
+                } else {
+                    let str = parse_identifier(&mut it);
+                    ast.push(Stmt::ReferenceAbsolute(str.to_string()));
+                }
             },
             Token::Colon => {
                 let str = parse_identifier(&mut it);
@@ -56,7 +64,10 @@ pub fn parse(tokens: &[Token]) -> Ast {
                 let number = parse_number(&mut it);
                 ast.push(Stmt::OriginAbsolute(number));
             },
-            Token::Ampersand => todo!(),
+            Token::Ampersand => {
+                let str = parse_identifier(&mut it);
+                ast.push(Stmt::LocalLabelAbsolute(str.to_string()));
+            },
             Token::Period => {
                 let number = parse_number(&mut it);
                 ast.push(Stmt::RawByte(number as _));

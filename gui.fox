@@ -26,27 +26,45 @@ DROP #0
 HALT
 
 @cmd-buf
-=00 =00 =00 =20 ( Clear Layer )
+=00 ( Clear )
+=00
+=00
+.00 ( CMD | LAYER )
+.00 ( Flags )
+.00 ( FG | BG )
+.00 ( W | H )
 
 @x =00 ( X )
 =00 ( Y )
 :sprite
-=00000000 ( Flags )
+.20 ( CMD | LAYER )
+.00 ( Flags )
+.00 ( FG | BG )
+.00 ( W | H )
 
 =F8 ( X )
 =00000000 ( Y )
 :sprite
-=00000000 ( Flags )
+.20 ( CMD | LAYER )
+.00 ( Flags )
+.00 ( FG | BG )
+.00 ( W | H )
 
 =00 ( X )
 =F8 ( Y )
 :sprite
-=00000000 ( Flags )
+.20 ( CMD | LAYER )
+.00 ( Flags )
+.00 ( FG | BG )
+.00 ( W | H )
 
 =F8 ( X )
 =F8 ( Y )
 :sprite
-=00000000 ( Flags )
+.20 ( CMD | LAYER )
+.00 ( Flags )
+.00 ( FG | BG )
+.00 ( W | H )
 
 @sprite
 .33.33.33.33

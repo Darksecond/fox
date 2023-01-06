@@ -18,9 +18,9 @@ halt
 ;mouse-button LW ( -- button )
 ;button-last LW ( button -- button last )
 EQU ( button last -- cond )
-;on-mouse/done JNZ
+;&done JNZ
 ;mouse-button LW ( -- button )
-#1 EQU ;on-mouse/done JZ
+#1 EQU ;&done JZ
 
 ;button0 ;button-pressed CALL
 ;button1 ;button-pressed CALL
@@ -32,7 +32,7 @@ EQU ( button last -- cond )
 ;button7 ;button-pressed CALL
 ;cmd-buf ;screen-cmd-addr SW
 
-@on-mouse/done
+&done
 ;mouse-button LW ;button-last SW
 halt
 
@@ -53,79 +53,112 @@ RET
 @toggle ( addr -- )
 #8 ADD ( addr -- addr' )
 DUP LW ( addr' -- addr' sprite )
-;sprite-off EQU ;toggle/turn-on JNZ
+;sprite-off EQU ;&turn-on JNZ
 ( Turn off )
 ;sprite-off SWAP SW
-;toggle/done JMP
-@toggle/turn-on
+;&done JMP
+&turn-on
 ;sprite-on SWAP SW
 ( Turn on )
-@toggle/done
+&done
 RET
 
 @button-pressed ( addr -- )
 DUP ;in-range CALL ( addr -- addr cond )
-;button-pressed/done JZ
+;&done JZ
 DUP ;toggle CALL ( addr -- addr )
-@button-pressed/done
+&done
 DROP
 RET
 
 @cmd-buf
-=00 =00 =00 =20 ( Clear Layer )
+=00 ( Clear )
+=00
+=00
+.00 ( CMD | LAYER )
+.00 ( Flags )
+.00 ( FG | BG )
+.00 ( W | H )
 
 =20 ( X )
 =20 ( Y )
 :sprite-test
-=00 ( Flags )
+.20 ( CMD | LAYER )
+.00 ( Flags )
+.00 ( FG | BG )
+.00 ( W | H )
 
 @button0
 =10 ( X )
 =10 ( Y )
 :sprite-off
-=00 ( Flags )
+.20 ( CMD | LAYER )
+.00 ( Flags )
+.00 ( FG | BG )
+.00 ( W | H )
 
 @button1
 =19 ( X )
 =10 ( Y )
 :sprite-off
-=00 ( Flags )
+.20 ( CMD | LAYER )
+.00 ( Flags )
+.00 ( FG | BG )
+.00 ( W | H )
 
 @button2
 =22 ( X )
 =10 ( Y )
 :sprite-off
-=00 ( Flags )
+.20 ( CMD | LAYER )
+.00 ( Flags )
+.00 ( FG | BG )
+.00 ( W | H )
 
 @button3
 =2B ( X )
 =10 ( Y )
 :sprite-off
-=00 ( Flags )
+.20 ( CMD | LAYER )
+.00 ( Flags )
+.00 ( FG | BG )
+.00 ( W | H )
 
 @button4
 =34 ( X )
 =10 ( Y )
 :sprite-off
-=00 ( Flags )
+.20 ( CMD | LAYER )
+.00 ( Flags )
+.00 ( FG | BG )
+.00 ( W | H )
 
 @button5
 =3D ( X )
 =10 ( Y )
 :sprite-off
-=00 ( Flags )
+.20 ( CMD | LAYER )
+.00 ( Flags )
+.00 ( FG | BG )
+.00 ( W | H )
 
 @button6
 =46 ( X )
 =10 ( Y )
 :sprite-off
-=00 ( Flags )
+.20 ( CMD | LAYER )
+.00 ( Flags )
+.00 ( FG | BG )
+.00 ( W | H )
 
 @button7
 =4F ( X )
 =10 ( Y )
 :sprite-off
-=00 ( Flags )
+.20 ( CMD | LAYER )
+.00 ( Flags )
+.00 ( FG | BG )
+.00 ( W | H )
 
 @sprite-off
 .0F.0F.0F.0F

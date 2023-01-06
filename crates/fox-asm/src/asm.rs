@@ -15,6 +15,7 @@ pub struct Assembler {
     length: usize,
     labels: HashMap<String, u32>,
     references: Vec<Reference>,
+    current_label: String,
 }
 
 impl Assembler {
@@ -25,6 +26,7 @@ impl Assembler {
             length: 0,
             labels: HashMap::new(),
             references: Vec::new(),
+            current_label: "on-reset".to_string(),
         }
     }
 
@@ -55,29 +57,46 @@ impl Assembler {
                     self.index = *value as _;
                 },
                 Stmt::LiteralWord(value) => {
-                        self.push_u8(OP_LITW);
-                        self.push_u32(*value);
+                    self.push_u8(OP_LITW);
+                    self.push_u32(*value);
                 },
                 Stmt::LabelAbsolute(value) => {
-                        self.labels.insert(value.to_string(), self.index as _);
+                    self.current_label = value.to_string();
+                    self.labels.insert(value.to_string(), self.index as _);
+                },
+                Stmt::LocalLabelAbsolute(value) => {
+                    let value = format!("{}/{}", self.current_label, value);
+                    self.labels.insert(value.to_string(), self.index as _);
+                },
+                Stmt::LocalReferenceAbsolute(value) => {
+                    let value = format!("{}/{}", self.current_label, value);
+
+                    self.push_u8(OP_LITW);
+
+                    self.references.push(Reference {
+                        label: value.to_string(),
+                        index: self.index,
+                    });
+
+                    self.push_u32(0);
                 },
                 Stmt::ReferenceAbsolute(value) => {
-                        self.push_u8(OP_LITW);
+                    self.push_u8(OP_LITW);
 
-                        self.references.push(Reference {
-                            label: value.to_string(),
-                            index: self.index,
-                        });
+                    self.references.push(Reference {
+                        label: value.to_string(),
+                        index: self.index,
+                    });
 
-                        self.push_u32(0);
+                    self.push_u32(0);
                 },
                 Stmt::RawReferenceAbsolute(value) => {
-                        self.references.push(Reference {
-                            label: value.to_string(),
-                            index: self.index,
-                        });
+                    self.references.push(Reference {
+                        label: value.to_string(),
+                        index: self.index,
+                    });
 
-                        self.push_u32(0);
+                    self.push_u32(0);
                 },
                 Stmt::Operation(value) => {
                     self.push_u8(*value as _);

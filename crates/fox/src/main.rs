@@ -1,13 +1,105 @@
 use fox_vm::{VirtualMachine, Machine, DirectMemoryAccess};
 use fox_bytecode::memory::*;
-use winit::event_loop::EventLoop;
+use winit::event_loop::{EventLoop, EventLoopWindowTarget};
 use winit::event::{Event, StartCause};
-use fox_vm::device::{Device, match_device, FileDevice, SystemDevice, ConsoleDevice, ScreenDevice, MouseDevice};
+use fox_vm::device::{Device, match_device, FileDevice, SystemDevice, ConsoleDevice, ScreenDevice, MouseDevice, screen::Display};
+use pixels::{Pixels, SurfaceTexture};
+use winit::window::{Window, WindowBuilder};
+use winit::dpi::LogicalSize;
+
+struct PixelDisplay {
+    window: Option<Window>,
+    pixels: Option<Pixels>,
+}
+
+impl PixelDisplay {
+    pub fn new() -> Self {
+        Self {
+            window: None,
+            pixels: None,
+        }
+    }
+
+    pub fn init(&mut self, event_loop: &EventLoopWindowTarget<()>, size: (u32, u32)) {
+        let (width, height) = size;
+
+        let size = LogicalSize::new(width as f64, height as f64);
+        let window = WindowBuilder::new()
+            .with_resizable(false)
+            .with_inner_size(size)
+            .with_title("Fox")
+            .build(event_loop)
+            .expect("Could not construct window");
+
+
+        let window_size = window.inner_size();
+        let texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
+        let pixels = Pixels::new(width, height, texture).expect("Could not pixels");
+
+        self.window = Some(window);
+        self.pixels = Some(pixels);
+    }
+
+    pub fn position(&self, position: winit::dpi::PhysicalPosition<f64>) -> (u32, u32) {
+        let scale = self.window.as_ref().unwrap().scale_factor();
+        let position = position.to_logical::<f64>(scale);
+        let x = (position.x / 2.0) as u32;
+        let y = (position.y / 2.0) as u32;
+
+        (x, y)
+    }
+}
+
+impl Display for PixelDisplay {
+    fn resize(&mut self, width: u32, height: u32, zoom: u32) -> (u32, u32, u32) {
+        let width = u32::max(8, width);
+        let height = u32::max(8, height);
+        let zoom = u32::max(1, zoom);
+
+        let window = self.window.as_ref().unwrap();
+        let pixels = self.pixels.as_mut().unwrap();
+
+        let size = LogicalSize::new((width * zoom) as f64, (height * zoom) as f64);
+        window.set_min_inner_size(Some(size));
+        window.set_max_inner_size(Some(size));
+        window.set_inner_size(size);
+
+        let window_size = window.inner_size();
+        pixels.resize_buffer(width, height).unwrap();
+        pixels.resize_surface(window_size.width, window_size.height).unwrap();
+
+        (width, height, zoom)
+    }
+
+    fn render(&mut self, buffer: &[u8], palette: &[u32; 16]) {
+        let pixels = self.pixels.as_mut().unwrap();
+
+        let frame = pixels.get_frame_mut();
+
+        let it = buffer.iter().flat_map(|pp| {
+            [pp >> 4, pp & 0x0F]
+        });
+
+        for (index, color) in it.enumerate() {
+            let color = palette[color as usize];
+
+            let findex = index * 4;
+            let [b,g,r,_] = u32::to_le_bytes(color);
+            frame[findex + 0] = r;
+            frame[findex + 1] = g;
+            frame[findex + 2] = b;
+            frame[findex + 3] = 0xFF;
+        }
+
+        pixels.render().unwrap();
+        self.window.as_ref().unwrap().request_redraw();
+    }
+}
 
 struct ScreenMachine {
     system: SystemDevice,
     console: ConsoleDevice,
-    screen: ScreenDevice,
+    screen: ScreenDevice<PixelDisplay>,
     file0: FileDevice,
     file1: FileDevice,
     mouse: MouseDevice,
@@ -18,8 +110,8 @@ impl ScreenMachine {
         (SYSTEM_BASE  , DEVICE_LENGTH),       // 0
         (CONSOLE_BASE , DEVICE_LENGTH),       // 1
         (SCREEN_BASE  , DEVICE_LENGTH),       // 2
-        (SCREEN_LAYER0, SCREEN_LAYER_LENGTH), // 3
-        (SCREEN_LAYER1, SCREEN_LAYER_LENGTH), // 4
+        (screen::LAYER0, SCREEN_LAYER_LENGTH), // 3
+        (screen::LAYER1, SCREEN_LAYER_LENGTH), // 4
         (FILE0_BASE   , DEVICE_LENGTH),       // 5
         (FILE1_BASE   , DEVICE_LENGTH),       // 6
         (MOUSE_BASE   , DEVICE_LENGTH),       // 7
@@ -43,7 +135,7 @@ impl ScreenMachine {
         Self {
             system: SystemDevice::new(),
             console: ConsoleDevice::new(),
-            screen: ScreenDevice::new(),
+            screen: ScreenDevice::new(PixelDisplay::new()),
             file0: FileDevice::new(FILE0_BASE),
             file1: FileDevice::new(FILE1_BASE),
             mouse: MouseDevice::new(),
@@ -99,7 +191,7 @@ pub fn main() {
                 return;
             },
             Event::NewEvents(StartCause::Init) => {
-                machine.screen.init(event_loop);
+                machine.screen.display.init(event_loop, machine.screen.size());
 
                 vm.run(&mut machine, RESET_VECTOR);
             },
@@ -128,7 +220,7 @@ pub fn main() {
                 }
             },
             Event::WindowEvent { event: WindowEvent::CursorMoved { position, .. }, ..  } => {
-                let position = machine.screen.position(position);
+                let position = machine.screen.display.position(position);
                 machine.mouse.set_position(position);
 
                 let vector = machine.mouse.vector;
