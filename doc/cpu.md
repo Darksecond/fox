@@ -33,5 +33,8 @@ This will halt the CPU waiting for a vector to trigger.
 #### DBG (`0x01`)
 This will debug print the contents of the stack and return stack.
 
-#### LITW (`0x10`)
+#### LITW (`0x10`) [` -- a`]
 This will read the next 4 bytes in little-endian format and put the value on the stack.
+
+#### DUP (`0x11`) [`a -- a a`]
+This will duplicate the top value on the stack.
