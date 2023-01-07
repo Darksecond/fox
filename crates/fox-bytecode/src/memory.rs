@@ -10,6 +10,7 @@ pub const SCREEN_BASE  : u32 = 0x10020000;
 pub const FILE0_BASE   : u32 = 0x10030000;
 pub const FILE1_BASE   : u32 = 0x10040000;
 pub const MOUSE_BASE   : u32 = 0x10050000;
+pub const KEYBOARD_BASE: u32 = 0x10060000;
 
 // -- CONSOLE DEVICE --
 // All of these are relative.
@@ -96,3 +97,15 @@ pub const MOUSE_BUTTON_MIDDLE: u32 = 0b0000_0010;
 pub const MOUSE_BUTTON_RIGHT : u32 = 0b0000_0100;
 
 pub const MOUSE_FLAG_FOCUS   : u32 = 0b0000_0001;
+
+pub mod keyboard {
+    pub const VECTOR   : u32 = 0x0000;
+    pub const CODEPOINT: u32 = 0x0004;
+    pub const BUTTONS  : u32 = 0x0008;
+
+    // Buttons
+    pub const BUTTON_LEFT : u32 = 0x01;
+    pub const BUTTON_RIGHT: u32 = 0x02;
+    pub const BUTTON_UP   : u32 = 0x04;
+    pub const BUTTON_DOWN : u32 = 0x08;
+}

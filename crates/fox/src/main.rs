@@ -2,14 +2,17 @@ use fox_vm::{VirtualMachine, Machine, DirectMemoryAccess};
 use fox_bytecode::memory::*;
 use winit::event_loop::{EventLoop, EventLoopWindowTarget};
 use winit::event::{Event, StartCause};
-use fox_vm::device::{Device, match_device, FileDevice, SystemDevice, ConsoleDevice, ScreenDevice, MouseDevice, screen::Display};
+use fox_vm::device::{Device, match_device, FileDevice, SystemDevice, ConsoleDevice, ScreenDevice, MouseDevice, screen::Display, keyboard::KeyboardDevice};
 use pixels::{Pixels, SurfaceTexture};
 use winit::window::{Window, WindowBuilder};
 use winit::dpi::LogicalSize;
+use fox_vm::device::keyboard::Key;
+use winit::event::VirtualKeyCode;
 
 struct PixelDisplay {
     window: Option<Window>,
     pixels: Option<Pixels>,
+    zoom: u32,
 }
 
 impl PixelDisplay {
@@ -17,6 +20,7 @@ impl PixelDisplay {
         Self {
             window: None,
             pixels: None,
+            zoom: 1,
         }
     }
 
@@ -31,7 +35,6 @@ impl PixelDisplay {
             .build(event_loop)
             .expect("Could not construct window");
 
-
         let window_size = window.inner_size();
         let texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
         let pixels = Pixels::new(width, height, texture).expect("Could not pixels");
@@ -43,8 +46,8 @@ impl PixelDisplay {
     pub fn position(&self, position: winit::dpi::PhysicalPosition<f64>) -> (u32, u32) {
         let scale = self.window.as_ref().unwrap().scale_factor();
         let position = position.to_logical::<f64>(scale);
-        let x = (position.x / 2.0) as u32;
-        let y = (position.y / 2.0) as u32;
+        let x = (position.x / self.zoom as f64) as u32;
+        let y = (position.y / self.zoom as f64) as u32;
 
         (x, y)
     }
@@ -55,6 +58,8 @@ impl Display for PixelDisplay {
         let width = u32::max(8, width);
         let height = u32::max(8, height);
         let zoom = u32::max(1, zoom);
+
+        self.zoom = zoom;
 
         let window = self.window.as_ref().unwrap();
         let pixels = self.pixels.as_mut().unwrap();
@@ -96,6 +101,16 @@ impl Display for PixelDisplay {
     }
 }
 
+fn map_key(keycode: VirtualKeyCode) -> Option<Key> {
+    match keycode {
+        VirtualKeyCode::Left => Some(Key::Left),
+        VirtualKeyCode::Right => Some(Key::Right),
+        VirtualKeyCode::Up => Some(Key::Up),
+        VirtualKeyCode::Down => Some(Key::Down),
+        _ => None,
+    }
+}
+
 struct ScreenMachine {
     system: SystemDevice,
     console: ConsoleDevice,
@@ -103,10 +118,11 @@ struct ScreenMachine {
     file0: FileDevice,
     file1: FileDevice,
     mouse: MouseDevice,
+    keyboard: KeyboardDevice,
 }
 
 impl ScreenMachine {
-    const DEVICES: [(u32, u32); 8] = [
+    const DEVICES: [(u32, u32); 9] = [
         (SYSTEM_BASE  , DEVICE_LENGTH),       // 0
         (CONSOLE_BASE , DEVICE_LENGTH),       // 1
         (SCREEN_BASE  , DEVICE_LENGTH),       // 2
@@ -115,6 +131,7 @@ impl ScreenMachine {
         (FILE0_BASE   , DEVICE_LENGTH),       // 5
         (FILE1_BASE   , DEVICE_LENGTH),       // 6
         (MOUSE_BASE   , DEVICE_LENGTH),       // 7
+        (KEYBOARD_BASE, DEVICE_LENGTH),       // 8
     ];
 
     fn device(&mut self, num: u32) -> &mut dyn Device {
@@ -127,6 +144,7 @@ impl ScreenMachine {
             5 => &mut self.file0,
             6 => &mut self.file1,
             7 => &mut self.mouse,
+            8 => &mut self.keyboard,
             _ => unimplemented!(),
         }
     }
@@ -139,6 +157,7 @@ impl ScreenMachine {
             file0: FileDevice::new(FILE0_BASE),
             file1: FileDevice::new(FILE1_BASE),
             mouse: MouseDevice::new(),
+            keyboard: KeyboardDevice::new(),
         }
     }
 }
@@ -244,6 +263,30 @@ pub fn main() {
                 let vector = machine.mouse.vector;
                 if vector != 0 {
                     vm.run(&mut machine, vector);
+                }
+            },
+            Event::WindowEvent { event: WindowEvent::ReceivedCharacter(character), .. } => {
+                machine.keyboard.on_char(character);
+
+                let vector = machine.keyboard.vector;
+                if vector != 0 {
+                    vm.run(&mut machine, vector);
+                }
+            },
+            Event::WindowEvent { event: WindowEvent::KeyboardInput { input, .. }, .. } => {
+                if let Some(keycode) = input.virtual_keycode {
+                    if let Some(key) = map_key(keycode) {
+                        let pressed = match input.state {
+                            winit::event::ElementState::Pressed => true,
+                            winit::event::ElementState::Released => false,
+                        };
+                        machine.keyboard.on_key(key, pressed);
+
+                        let vector = machine.keyboard.vector;
+                        if vector != 0 {
+                            vm.run(&mut machine, vector);
+                        }
+                    }
                 }
             },
             _ => (),

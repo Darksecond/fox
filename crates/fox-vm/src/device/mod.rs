@@ -3,6 +3,7 @@ pub mod system;
 pub mod console;
 pub mod screen;
 pub mod mouse;
+pub mod keyboard;
 
 pub use file::FileDevice;
 pub use system::SystemDevice;
