@@ -96,14 +96,23 @@ impl Display for PixelDisplay {
             [pp >> 4, pp & 0x0F]
         });
 
-        for (index, color) in it.enumerate() {
+        let mut ay = 0;
+        let mut ax = 0;
+
+        for color in it {
             let color = palette[color as usize];
 
-            let unscaled_y = index as u32 / self.height;
-            let unscaled_x = index as u32 % self.width;
+            let unscaled_x = ax;
+            let unscaled_y = ay;
 
-            let y = unscaled_y * scale;
+            ax += 1;
+            if ax == self.width {
+                ax = 0;
+                ay += 1;
+            }
+
             let x = unscaled_x * scale;
+            let y = unscaled_y * scale;
             let width = self.width * scale;
             let index = y * width + x;
 
