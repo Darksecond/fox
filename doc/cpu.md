@@ -71,8 +71,23 @@ This will divide using the top 2 values on the stack.
 #### AND (`0x24`) [`a b -- a&b`]
 AND top 2 values on the stack.
 
-#### OR (`0x24`) [`a b -- a|b`]
+#### OR (`0x25`) [`a b -- a|b`]
 OR top 2 values on the stack.
 
-#### XOR (`0x24`) [`a b -- a^b`]
+#### XOR (`0x26`) [`a b -- a^b`]
 XOR top 2 values on the stack.
+
+#### SHL (`0x27`) [`a b -- a>>b`]
+Shift Left.
+
+#### SHR (`0x28`) [`a b -- a<<b`]
+Shift Right.
+
+#### INC (`0x29`) [`a -- a+1`]
+Increment top value by one.
+
+#### DEC (`0x2A`) [`a -- a-1`]
+Decrement top value by one.
+
+#### SAR (`0x2B`) [`a b -- a>>>b`]
+Shift Arithmetic Right.
