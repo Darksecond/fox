@@ -91,3 +91,65 @@ Decrement top value by one.
 
 #### SAR (`0x2B`) [`a b -- a>>>b`]
 Shift Arithmetic Right.
+
+#### NOT (`0x2C`) [`a -- !a`]
+NOT top value.
+
+#### SW (`0x30`) [`value addr -- `]
+Store top stack value as little-endian word at addr.
+
+#### LW (`0x31`) [`addr -- value`]
+Load addr as little-endian word from addr.
+
+#### SB (`0x32`) [`value addr --`]
+Store top stack value as byte at addr.
+
+#### LB (`0x33`) [`addr -- value`]
+Load byte from addr.
+
+#### EQU (`0x40`) [`a b -- a==b`]
+Compare top 2 values, pushes `1` if equal, `0` otherwise.
+
+#### NEQ (`0x41`) [`a b -- a=!b`]
+Compare top 2 values, pushes `1` if  not equal, `0` otherwise.
+
+#### LT (`0x42`) [`a b -- a<b`]
+Compare top 2 values, pushes `1` if a less than b, `0` otherwise.
+
+#### GT (`0x43`) [`a b -- a>b`]
+Compare top 2 values, pushes `1` if a greater than b, `0` otherwise.
+
+#### LTE (`0x44`) [`a b -- a<=b`]
+Compare top 2 values, pushes `1` if a less than or equal to b, `0` otherwise.
+
+#### GTE (`0x45`) [`a b -- a>=b`]
+Compare top 2 values, pushes `1` if a greater than or equal to b, `0` otherwise.
+
+#### JMP (`0x50`) [`addr --`]
+Unconditional jump to addr.
+
+#### JZ (`0x51`) [`cond addr --`]
+Jump if cond is `0` to addr.
+
+#### CALL (`0x52`) [`addr --`]
+Jump to addr, pushing return address onto the call stack.
+
+#### RET (`0x52`) [`--`]
+Return to addr, pops the top value from the call stack.
+
+#### JNZ (`0x53`) [`cond addr --`]
+Jump if cond is not `0`.
+
+#### RPUSH (`0x60`) [`a --`]
+Pushes top value to call stack.
+
+#### RPOP (`0x61`) [`-- a`]
+Pops top value from call stack.
+
+#### RPEEK (`0x62`) [`-- a`]
+Duplicates top value from call stack onto normal stack.
+This is the same as doing: `RPOP DUP RPUSH`.
+
+#### RDROP (`0x63`) [`--`]
+Drops top value from call stack.
+This is the same as doing: `RPOP DROP`.
