@@ -53,3 +53,9 @@ This will rotate the top 3 values.
 
 #### LITB (`0x16`) [`-- a`]
 This will read the next byte and put it zero-extended on the stack.
+
+#### ADD (`0x20`) [`a b -- a+b`]
+This will add the top 2 values on the stack together. It uses wrapping add.
+
+#### SUB (`0x21`) [`a b -- a-b`]
+This will subtract using the top 2 values on the stack. It uses wrapping sub.
