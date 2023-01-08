@@ -2,6 +2,8 @@
 
 The Fox CPU is a Stack Machine.
 It's a 32-bit system with native 32-bit words.
+It has 16 megabytes of available memory, starting at 0x000.
+The CPU will reset to 0x100 and start running from there.
 
 ## Opcodes
 
