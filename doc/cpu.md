@@ -59,3 +59,18 @@ This will add the top 2 values on the stack together. It uses wrapping add.
 
 #### SUB (`0x21`) [`a b -- a-b`]
 This will subtract using the top 2 values on the stack. It uses wrapping sub.
+
+#### MUL (`0x22`) [`a b -- a*b`]
+This will multiply the top 2 values on the stack.
+
+#### DIV (`0x23`) [`a b -- a/b`]
+This will divide using the top 2 values on the stack.
+
+#### AND (`0x24`) [`a b -- a&b`]
+AND top 2 values on the stack.
+
+#### OR (`0x24`) [`a b -- a|b`]
+OR top 2 values on the stack.
+
+#### XOR (`0x24`) [`a b -- a^b`]
+XOR top 2 values on the stack.
