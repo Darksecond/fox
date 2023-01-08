@@ -38,3 +38,18 @@ This will read the next 4 bytes in little-endian format and put the value on the
 
 #### DUP (`0x11`) [`a -- a a`]
 This will duplicate the top value on the stack.
+
+#### DROP (`0x12`) [`a b -- a`]
+This will drop the top value from the stack.
+
+#### SWAP (`0x13`) [`a b -- b a`]
+This will swap the top 2 values on the stack.
+
+#### OVER (`0x14`) [`a b -- a b a`]
+This will duplicate the value one down from the top.
+
+#### ROT (`0x15`) [`a b c -- b c a`]
+This will rotate the top 3 values.
+
+#### LITB (`0x16`) [`-- a`]
+This will read the next byte and put it zero-extended on the stack.
