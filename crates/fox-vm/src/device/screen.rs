@@ -142,7 +142,7 @@ impl<D: Display> ScreenDevice<D> {
             }
         }
 
-        self.display.render(&self.layers[0], &self.palette);
+        self.display.render(&self.composited_layer, &self.palette);
     }
 
     fn resize(&mut self) {
