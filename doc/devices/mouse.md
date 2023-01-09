@@ -3,13 +3,13 @@
 The mouse device reports mouse activity in fox.
 Vector is triggered on mouse move, state or button changes.
 
-| Address    | Name         |
-| ---------- | ------------ |
-| 0x10050000 | Vector       |
-| 0x10050004 | X Coordinate |
-| 0x10050008 | Y Coordinate |
-| 0x1005000C | Flags        |
-| 0x10050010 | Button       |
+| Address      | Name         |
+| ------------ | ------------ |
+| `0x10050000` | Vector       |
+| `0x10050004` | X Coordinate |
+| `0x10050008` | Y Coordinate |
+| `0x1005000C` | Flags        |
+| `0x10050010` | Button       |
 
 ## Flags
 
