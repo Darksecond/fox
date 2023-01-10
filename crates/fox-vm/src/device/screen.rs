@@ -48,12 +48,14 @@ impl Sprite {
         }
     }
 
-    pub fn draw<T: Display>(&self, layer: u8, x: u32, y: u32, screen: &mut ScreenDevice<T>) {
+    pub fn draw<T: Display>(&self, layer: u8, x: u32, y: u32, skip_clear: bool, screen: &mut ScreenDevice<T>) {
         for sy in 0..8u32 {
             for sx in 0..8u32 {
                 let index = sy*8+sx;
                 let pixel = self.data[index as usize];
-                screen.set_pixel(layer, x+sx, y+sy, pixel);
+                if !skip_clear || pixel != 0 {
+                    screen.set_pixel(layer, x+sx, y+sy, pixel);
+                }
             }
         }
     }
@@ -91,7 +93,7 @@ pub struct ScreenDevice<D: Display> {
     width: u32,
     height: u32,
     composited_layer: Vec<u8>,
-    layers: [Vec<u8>; 2],
+    layers: [Vec<u8>; 4],
     palette: [u32; 16],
     cmd_length: u32,
     zoom: u32,
@@ -108,6 +110,8 @@ impl<D: Display> ScreenDevice<D> {
             layers: [
                 Vec::new(),
                 Vec::new(),
+                Vec::new(),
+                Vec::new(),
             ],
             palette: PALETTE,
             cmd_length: 0,
@@ -119,6 +123,8 @@ impl<D: Display> ScreenDevice<D> {
             let size = (screen.width * screen.height) / 2;
             screen.layers[0].resize(size as _, 0);
             screen.layers[1].resize(size as _, 0);
+            screen.layers[2].resize(size as _, 0);
+            screen.layers[3].resize(size as _, 0);
             screen.composited_layer.resize(size as _, 0);
         }
 
@@ -152,6 +158,8 @@ impl<D: Display> ScreenDevice<D> {
             let size = (self.width * self.height) / 2;
             self.layers[0].resize(size as _, 0);
             self.layers[1].resize(size as _, 0);
+            self.layers[2].resize(size as _, 0);
+            self.layers[3].resize(size as _, 0);
             self.composited_layer.resize(size as _, 0);
         }
     }
@@ -183,9 +191,11 @@ impl<D: Display> ScreenDevice<D> {
         let mut source = dma.read_u32(addr + command::SOURCE);
 
         let layer = (dma.read_u8(addr + command::COMMAND) & 0xF) as u8;
-        let _flags = dma.read_u8(addr + command::FLAGS);
+        let flags = dma.read_u8(addr + command::FLAGS);
         let color = dma.read_u8(addr + command::COLOR);
         let repeat = dma.read_u8(addr + command::REPEAT);
+
+        let is_skip = flags & command::FLAGS_SKIP_CLEAR != 0;
 
         let fg = (color >> 4) as u8;
         let bg = (color & 0xF) as u8;
@@ -196,7 +206,7 @@ impl<D: Display> ScreenDevice<D> {
             for _ in 0..width {
                 let mut sprite = Sprite::new();
                 sprite.read_1bpp(source, fg, bg, dma);
-                sprite.draw(layer, x, y, self);
+                sprite.draw(layer, x, y, is_skip, self);
 
                 x += 8;
                 source += 8;
@@ -212,8 +222,10 @@ impl<D: Display> ScreenDevice<D> {
         let mut source = dma.read_u32(addr + command::SOURCE);
 
         let layer = (dma.read_u8(addr + command::COMMAND) & 0xF) as u8;
-        let _flags = dma.read_u8(addr + command::FLAGS);
+        let flags = dma.read_u8(addr + command::FLAGS);
         let repeat = dma.read_u8(addr + command::REPEAT);
+
+        let is_skip = flags & command::FLAGS_SKIP_CLEAR != 0;
 
         let width = 1 + (repeat >> 4);
         let height = 1 + (repeat & 0xF);
@@ -222,7 +234,7 @@ impl<D: Display> ScreenDevice<D> {
             for _ in 0..width {
                 let mut sprite = Sprite::new();
                 sprite.read_4bpp(source, dma);
-                sprite.draw(layer, x, y, self);
+                sprite.draw(layer, x, y, is_skip, self);
 
                 x += 8;
                 source += 32;
@@ -312,6 +324,14 @@ impl<D: Display> Device for ScreenDevice<D> {
                 let index = addr - screen::LAYER1;
                 self.layers[1][index as usize] = value;
             },
+            screen::LAYER2..=screen::LAYER2_TOP => {
+                let index = addr - screen::LAYER2;
+                self.layers[2][index as usize] = value;
+            },
+            screen::LAYER3..=screen::LAYER3_TOP => {
+                let index = addr - screen::LAYER3;
+                self.layers[3][index as usize] = value;
+            },
             _ => unimplemented!(),
         }
     }
@@ -325,6 +345,14 @@ impl<D: Display> Device for ScreenDevice<D> {
             screen::LAYER1..=screen::LAYER1_TOP => {
                 let index = addr - screen::LAYER1;
                 self.layers[1][index as usize]
+            },
+            screen::LAYER2..=screen::LAYER2_TOP => {
+                let index = addr - screen::LAYER2;
+                self.layers[2][index as usize]
+            },
+            screen::LAYER3..=screen::LAYER3_TOP => {
+                let index = addr - screen::LAYER3;
+                self.layers[3][index as usize]
             },
             _ => unimplemented!(),
         }

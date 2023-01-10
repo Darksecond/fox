@@ -46,6 +46,10 @@ pub mod screen {
     pub const LAYER0_TOP: u32 = LAYER0 + super::SCREEN_LAYER_LENGTH-1;
     pub const LAYER1    : u32 = 0x20080000;
     pub const LAYER1_TOP: u32 = LAYER1 + super::SCREEN_LAYER_LENGTH-1;
+    pub const LAYER2    : u32 = 0x20100000;
+    pub const LAYER2_TOP: u32 = LAYER2 + super::SCREEN_LAYER_LENGTH-1;
+    pub const LAYER3    : u32 = 0x20180000;
+    pub const LAYER3_TOP: u32 = LAYER3 + super::SCREEN_LAYER_LENGTH-1;
 
     // -- SCREEN SPRITE COMMAND --
     pub mod command {
@@ -67,10 +71,10 @@ pub mod screen {
         /// 4bpp Sprite
         pub const COMMAND_SPRITE4: u32 = 0x02;
 
-        pub const FLAGS_FLIP_X    : u32 = 0x01;
-        pub const FLAGS_FLIP_Y    : u32 = 0x02;
-        pub const FLAGS_FLIP_XY   : u32 = 0x04;
-        pub const FLAGS_SKIP_CLEAR: u32 = 0x08;
+        pub const FLAGS_FLIP_X    : u8 = 0x01;
+        pub const FLAGS_FLIP_Y    : u8 = 0x02;
+        pub const FLAGS_FLIP_XY   : u8 = 0x04;
+        pub const FLAGS_SKIP_CLEAR: u8 = 0x08;
     }
 }
 

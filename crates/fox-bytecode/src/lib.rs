@@ -8,6 +8,8 @@ pub const OP_DUP : u8 = 0x11;
 pub const OP_DROP: u8 = 0x12;
 pub const OP_SWAP: u8 = 0x13;
 pub const OP_OVER: u8 = 0x14;
+pub const OP_ROT : u8 = 0x15;
+pub const OP_LITB: u8 = 0x16;
 
 pub const OP_ADD: u8 = 0x20;
 pub const OP_SUB: u8 = 0x21;
@@ -19,6 +21,9 @@ pub const OP_XOR: u8 = 0x26;
 pub const OP_SHL: u8 = 0x27;
 pub const OP_SHR: u8 = 0x28;
 pub const OP_INC: u8 = 0x29;
+pub const OP_DEC: u8 = 0x2A;
+pub const OP_SAR: u8 = 0x2B;
+pub const OP_NOT: u8 = 0x2C;
 
 pub const OP_SW: u8 = 0x30;
 pub const OP_LW: u8 = 0x31;
@@ -29,6 +34,8 @@ pub const OP_EQU: u8 = 0x40;
 pub const OP_NEQ: u8 = 0x41;
 pub const OP_LT : u8 = 0x42;
 pub const OP_GT : u8 = 0x43;
+pub const OP_LTE: u8 = 0x44;
+pub const OP_GTE: u8 = 0x45;
 
 pub const OP_JMP : u8 = 0x50;
 pub const OP_JZ  : u8 = 0x51;
@@ -37,7 +44,9 @@ pub const OP_RET : u8 = 0x53;
 pub const OP_JNZ : u8 = 0x54;
 
 pub const OP_RPUSH: u8 = 0x60;
-pub const OP_RPOP: u8 = 0x61;
+pub const OP_RPOP : u8 = 0x61;
+pub const OP_RPEEK: u8 = 0x62;
+pub const OP_RDROP: u8 = 0x63;
 
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
@@ -50,6 +59,8 @@ pub enum Opcode {
     Drop = OP_DROP,
     Swap = OP_SWAP,
     Over = OP_OVER,
+    Rot = OP_ROT,
+    LitB = OP_LITB,
 
     Add = OP_ADD,
     Sub = OP_SUB,
@@ -61,6 +72,9 @@ pub enum Opcode {
     Shl = OP_SHL,
     Shr = OP_SHR,
     Inc = OP_INC,
+    Dec = OP_DEC,
+    Sar = OP_SAR,
+    Not = OP_NOT,
 
     Sw = OP_SW,
     Lw = OP_LW,
@@ -71,6 +85,8 @@ pub enum Opcode {
     Neq = OP_NEQ,
     Lt = OP_LT,
     Gt = OP_GT,
+    Lte = OP_LTE,
+    Gte = OP_GTE,
 
     Jmp = OP_JMP,
     Jz = OP_JZ,
@@ -80,6 +96,8 @@ pub enum Opcode {
 
     Rpush = OP_RPUSH,
     Rpop = OP_RPOP,
+    Rpeek = OP_RPEEK,
+    Rdrop = OP_RDROP,
 }
 
 impl std::str::FromStr for Opcode {
@@ -95,6 +113,8 @@ impl std::str::FromStr for Opcode {
             "drop" => Ok(Opcode::Drop),
             "swap" => Ok(Opcode::Swap),
             "over" => Ok(Opcode::Over),
+            "rot" => Ok(Opcode::Rot),
+            "litb" => Ok(Opcode::LitB),
 
             "add" => Ok(Opcode::Add),
             "sub" => Ok(Opcode::Sub),
@@ -106,6 +126,9 @@ impl std::str::FromStr for Opcode {
             "shl" => Ok(Opcode::Shl),
             "shr" => Ok(Opcode::Shr),
             "inc" => Ok(Opcode::Inc),
+            "dec" => Ok(Opcode::Dec),
+            "sar" => Ok(Opcode::Sar),
+            "not" => Ok(Opcode::Not),
 
             "sw" => Ok(Opcode::Sw),
             "lw" => Ok(Opcode::Lw),
@@ -116,6 +139,8 @@ impl std::str::FromStr for Opcode {
             "neq" => Ok(Opcode::Neq),
             "lt" => Ok(Opcode::Lt),
             "gt" => Ok(Opcode::Gt),
+            "lte" => Ok(Opcode::Lte),
+            "gte" => Ok(Opcode::Gte),
 
             "jmp" => Ok(Opcode::Jmp),
             "jz" => Ok(Opcode::Jz),
@@ -125,6 +150,8 @@ impl std::str::FromStr for Opcode {
 
             "rpush" => Ok(Opcode::Rpush),
             "rpop" => Ok(Opcode::Rpop),
+            "rpeek" => Ok(Opcode::Rpeek),
+            "rdrop" => Ok(Opcode::Rdrop),
 
             _ => Err(()),
         }

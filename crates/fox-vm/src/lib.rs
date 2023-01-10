@@ -164,6 +164,19 @@ impl VirtualMachine {
                     self.push(b);
                     self.push(a);
                 },
+                OP_ROT => {
+                    let c = self.pop();
+                    let b = self.pop();
+                    let a = self.pop();
+                    self.push(b);
+                    self.push(c);
+                    self.push(a);
+                },
+                OP_LITB => {
+                    let number = self.next_u8();
+                    self.push(number as u32);
+                },
+
                 OP_ADD => {
                     let b = self.pop();
                     let a = self.pop();
@@ -189,9 +202,43 @@ impl VirtualMachine {
                     let a = self.pop();
                     self.push(a & b);
                 }
+                OP_OR => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    self.push(a | b);
+                }
+                OP_XOR => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    self.push(a ^ b);
+                }
+                OP_SHL => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    self.push(a << b);
+                }
+                OP_SHR => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    self.push(a >> b);
+                }
                 OP_INC => {
                     let a = self.pop();
                     self.push(a.wrapping_add(1));
+                }
+                OP_DEC => {
+                    let a = self.pop();
+                    self.push(a.wrapping_sub(1));
+                }
+                OP_SAR => {
+                    let b = self.pop() as i32;
+                    let a = self.pop() as i32;
+                    let value = a >> b;
+                    self.push(value as u32);
+                }
+                OP_NOT => {
+                    let a = self.pop();
+                    self.push(!a);
                 }
 
                 OP_LW => {
@@ -231,6 +278,18 @@ impl VirtualMachine {
                     let b = self.pop();
                     let a = self.pop();
                     let out = if a < b { 1 } else { 0 };
+                    self.push(out);
+                },
+                OP_GTE => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let out = if a >= b { 1 } else { 0 };
+                    self.push(out);
+                },
+                OP_LTE => {
+                    let b = self.pop();
+                    let a = self.pop();
+                    let out = if a <= b { 1 } else { 0 };
                     self.push(out);
                 },
                 OP_NEQ => {
@@ -277,6 +336,21 @@ impl VirtualMachine {
                     unsafe {
                         self.ip = self.mem.as_mut_ptr().offset(addr as _);
                     }
+                }
+                OP_RPUSH => {
+                    let value = self.pop();
+                    self.rpush(value);
+                }
+                OP_RPOP => {
+                    let value = self.rpop();
+                    self.push(value);
+                }
+                OP_RPEEK => {
+                    let value = self.rpeek();
+                    self.push(value);
+                }
+                OP_RDROP => {
+                    self.rpop();
                 }
                 x => unimplemented!("0x{:02x}", x),
             }
@@ -401,6 +475,13 @@ impl VirtualMachine {
         unsafe {
             self.rp = self.rp.offset(-1);
             *self.rp
+        }
+    }
+
+    fn rpeek(&self) -> u32 {
+        //TODO Add underflow check
+        unsafe {
+            *self.rp.offset(-1)
         }
     }
 }
