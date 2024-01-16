@@ -85,17 +85,20 @@ pub trait Machine {
 use fox_bytecode::memory::RESET_VECTOR;
 
 const MEM_SIZE: usize = 16 * 1024 * 1024; // 16 Megabytes
-const SP_SIZE: usize = 1024;
-const RP_SIZE: usize = 1024;
+const SP_SIZE: usize = 1024; // bytes
+const RP_SIZE: usize = 1024; // bytes
+const LOCAL_SIZE: usize = 1024; // bytes
 
 const SP_OFFSET: usize = MEM_SIZE - SP_SIZE;
 const RP_OFFSET: usize = MEM_SIZE - SP_SIZE - RP_SIZE;
+const LOCAL_OFFSET: usize = MEM_SIZE - SP_SIZE - RP_SIZE - LOCAL_SIZE;
 
 pub struct VirtualMachine {
     mem: Box<[u8]>,
     ip: *const u8,
     sp: *mut u32,
     rp: *mut u32,
+    local: *mut u32,
 }
 
 impl VirtualMachine {
@@ -104,12 +107,14 @@ impl VirtualMachine {
         let ip = unsafe { mem.as_ptr().offset(RESET_VECTOR as _) };
         let sp = unsafe { mem.as_mut_ptr().offset(SP_OFFSET as _) };
         let rp = unsafe { mem.as_mut_ptr().offset(RP_OFFSET as _) };
+        let local = unsafe { mem.as_mut_ptr().offset(LOCAL_OFFSET as _) };
 
         Self {
             mem,
             ip,
             sp: sp as _,
             rp: rp as _,
+            local: local as _,
         }
     }
 
@@ -175,6 +180,11 @@ impl VirtualMachine {
                 OP_LITB => {
                     let number = self.next_u8();
                     self.push(number as u32);
+                },
+                OP_PICK => {
+                    let index = self.pop();
+                    let value = self.peekn(index);
+                    self.push(value);
                 },
 
                 OP_ADD => {
@@ -352,11 +362,29 @@ impl VirtualMachine {
                 OP_RDROP => {
                     self.rpop();
                 }
+                OP_BEGIN => {
+                    let length = self.pop();
+                    self.lbegin(length);
+                },
+                OP_END => {
+                    let length = self.pop();
+                    self.lend(length);
+                },
+                OP_GET => {
+                    let addr = self.pop();
+                    self.push(self.lget(addr));
+                },
+                OP_SET => {
+                    let addr = self.pop();
+                    let value = self.pop();
+                    self.lset(addr, value);
+                },
                 x => unimplemented!("0x{:02x}", x),
             }
         }
     }
 
+    //TODO Add local variables?
     fn dump(&self) {
         unsafe {
             let ip = self.mem.as_ptr();
@@ -462,6 +490,16 @@ impl VirtualMachine {
         }
     }
 
+
+    fn peekn(&self, n: u32) -> u32 {
+        //TODO Add underflow/overflow check
+        let offset = -1 - n as isize;
+        dbg!(offset);
+        unsafe {
+            *self.sp.offset(offset)
+        }
+    }
+
     fn rpush(&mut self, value: u32) {
         //TODO add overflow check
         unsafe {
@@ -482,6 +520,34 @@ impl VirtualMachine {
         //TODO Add underflow check
         unsafe {
             *self.rp.offset(-1)
+        }
+    }
+
+
+    fn lbegin(&mut self, length: u32) {
+        unsafe {
+            self.local = self.local.offset(length as _);
+        }
+    }
+
+    fn lend(&mut self, length: u32) {
+        let offset = -(length as isize);
+        unsafe {
+            self.local = self.local.offset(offset);
+        }
+    }
+
+    fn lget(&self, addr: u32) -> u32 {
+        let offset = -1 - addr as isize;
+        unsafe {
+            *self.local.offset(offset)
+        }
+    }
+
+    fn lset(&self, addr: u32, value: u32) {
+        let offset = -1 - addr as isize;
+        unsafe {
+            *self.local.offset(offset) = value;
         }
     }
 }

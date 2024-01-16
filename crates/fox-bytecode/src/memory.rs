@@ -65,11 +65,11 @@ pub mod screen {
         pub const REPEAT : u32 = 0xF;
 
         /// Clear layer
-        pub const COMMAND_CLEAR  : u32 = 0x00;
+        pub const COMMAND_CLEAR  : u8 = 0x00;
         /// 1bpp Sprite
-        pub const COMMAND_SPRITE1: u32 = 0x01;
+        pub const COMMAND_SPRITE1: u8 = 0x01;
         /// 4bpp Sprite
-        pub const COMMAND_SPRITE4: u32 = 0x02;
+        pub const COMMAND_SPRITE4: u8 = 0x02;
 
         pub const FLAGS_FLIP_X    : u8 = 0x01;
         pub const FLAGS_FLIP_Y    : u8 = 0x02;

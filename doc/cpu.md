@@ -12,13 +12,13 @@ The CPU will reset to 0x100 and start running from there.
 |      | 0     | 1    | 2     | 3     | 4    | 5    | 6    | 7    | 8    | 9    | A    | B    | C    | D    | E    | F    |
 | ---- | ----- | ---- | ----- | ----- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
 | 0    | HALT  | DBG  |       |       |      |      |      |      |      |      |      |      |      |      |      |      |
-| 1    | LITW  | DUP  | DROP  | SWAP  | OVER | ROT  | LITB |      |      |      |      |      |      |      |      |      |
+| 1    | LITW  | DUP  | DROP  | SWAP  | OVER | ROT  | LITB | PICK |      |      |      |      |      |      |      |      |
 | 2    | ADD   | SUB  | MUL   | DIV   | AND  | OR   | XOR  | SHL  | SHR  | INC  | DEC  | SAR  | NOT  |      |      |      |
 | 3    | SW    | LW   | SB    | LB    |      |      |      |      |      |      |      |      |      |      |      |      |
 | 4    | EQU   | NEQ  | LT    | GT    | GTE  | LTE  |      |      |      |      |      |      |      |      |      |      |
 | 5    | JMP   | JZ   | CALL  | RET   | JNZ  |      |      |      |      |      |      |      |      |      |      |      |
 | 6    | RPUSH | RPOP | RPEEK | RDROP |      |      |      |      |      |      |      |      |      |      |      |      |
-| 7    |       |      |       |       |      |      |      |      |      |      |      |      |      |      |      |      |
+| 7    | BEGIN | END  | GET   | SET   |      |      |      |      |      |      |      |      |      |      |      |      |
 | 8    |       |      |       |       |      |      |      |      |      |      |      |      |      |      |      |      |
 | 9    |       |      |       |       |      |      |      |      |      |      |      |      |      |      |      |      |
 | A    |       |      |       |       |      |      |      |      |      |      |      |      |      |      |      |      |
@@ -55,6 +55,10 @@ This will rotate the top 3 values.
 
 #### LITB (`0x16`) [`-- a`]
 This will read the next byte and put it zero-extended on the stack.
+
+#### PICK (`0x17`) [`a b c n -- d`]
+This will copy the nth item from the stack, removing `n`.
+A `#0 PICK` is equal to `DUP` and `#1 PICK` is equal to `OVER`.
 
 #### ADD (`0x20`) [`a b -- a+b`]
 This will add the top 2 values on the stack together. It uses wrapping add.
@@ -153,3 +157,16 @@ This is the same as doing: `RPOP DUP RPUSH`.
 #### RDROP (`0x63`) [`--`]
 Drops top value from call stack.
 This is the same as doing: `RPOP DROP`.
+
+#### BEGIN (`0x70`) [`n --`]
+Start a new local variable frame `n` variables big.
+
+#### END (`0x71`) [`n --`]
+End the current local variable frame of `n`n variables.
+This needs to have a matching begin.
+
+#### GET (`0x72`) [`addr -- value`]
+Get local variable by index. Needs to fit within the current frame.
+
+#### SET (`0x73`) [`value addr --`]
+Set local variable by index. Needs to fit within the current frame.

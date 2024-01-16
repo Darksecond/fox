@@ -10,6 +10,7 @@ pub const OP_SWAP: u8 = 0x13;
 pub const OP_OVER: u8 = 0x14;
 pub const OP_ROT : u8 = 0x15;
 pub const OP_LITB: u8 = 0x16;
+pub const OP_PICK: u8 = 0x17;
 
 pub const OP_ADD: u8 = 0x20;
 pub const OP_SUB: u8 = 0x21;
@@ -48,6 +49,11 @@ pub const OP_RPOP : u8 = 0x61;
 pub const OP_RPEEK: u8 = 0x62;
 pub const OP_RDROP: u8 = 0x63;
 
+pub const OP_BEGIN: u8 = 0x70;
+pub const OP_END  : u8 = 0x71;
+pub const OP_GET  : u8 = 0x72;
+pub const OP_SET  : u8 = 0x73;
+
 #[repr(u8)]
 #[derive(Debug, Copy, Clone)]
 pub enum Opcode {
@@ -61,6 +67,7 @@ pub enum Opcode {
     Over = OP_OVER,
     Rot = OP_ROT,
     LitB = OP_LITB,
+    Pick = OP_PICK,
 
     Add = OP_ADD,
     Sub = OP_SUB,
@@ -98,6 +105,11 @@ pub enum Opcode {
     Rpop = OP_RPOP,
     Rpeek = OP_RPEEK,
     Rdrop = OP_RDROP,
+
+    Begin = OP_BEGIN,
+    End = OP_END,
+    Get = OP_GET,
+    Set = OP_SET,
 }
 
 impl std::str::FromStr for Opcode {
@@ -115,6 +127,7 @@ impl std::str::FromStr for Opcode {
             "over" => Ok(Opcode::Over),
             "rot" => Ok(Opcode::Rot),
             "litb" => Ok(Opcode::LitB),
+            "pick" => Ok(Opcode::Pick),
 
             "add" => Ok(Opcode::Add),
             "sub" => Ok(Opcode::Sub),
@@ -152,6 +165,11 @@ impl std::str::FromStr for Opcode {
             "rpop" => Ok(Opcode::Rpop),
             "rpeek" => Ok(Opcode::Rpeek),
             "rdrop" => Ok(Opcode::Rdrop),
+
+            "begin" => Ok(Opcode::Begin),
+            "end" => Ok(Opcode::End),
+            "get" => Ok(Opcode::Get),
+            "set" => Ok(Opcode::Set),
 
             _ => Err(()),
         }

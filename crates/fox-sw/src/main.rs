@@ -150,16 +150,18 @@ struct ScreenMachine {
 }
 
 impl ScreenMachine {
-    const DEVICES: [(u32, u32); 9] = [
+    const DEVICES: [(u32, u32); 11] = [
         (SYSTEM_BASE  , DEVICE_LENGTH),       // 0
         (CONSOLE_BASE , DEVICE_LENGTH),       // 1
         (SCREEN_BASE  , DEVICE_LENGTH),       // 2
         (screen::LAYER0, SCREEN_LAYER_LENGTH), // 3
         (screen::LAYER1, SCREEN_LAYER_LENGTH), // 4
-        (FILE0_BASE   , DEVICE_LENGTH),       // 5
-        (FILE1_BASE   , DEVICE_LENGTH),       // 6
-        (MOUSE_BASE   , DEVICE_LENGTH),       // 7
-        (KEYBOARD_BASE, DEVICE_LENGTH),       // 8
+        (screen::LAYER2, SCREEN_LAYER_LENGTH), // 5
+        (screen::LAYER3, SCREEN_LAYER_LENGTH), // 6
+        (FILE0_BASE   , DEVICE_LENGTH),       // 7
+        (FILE1_BASE   , DEVICE_LENGTH),       // 8
+        (MOUSE_BASE   , DEVICE_LENGTH),       // 9
+        (KEYBOARD_BASE, DEVICE_LENGTH),       // 10
     ];
 
     fn device(&mut self, num: u32) -> &mut dyn Device {
@@ -169,10 +171,12 @@ impl ScreenMachine {
             2 => &mut self.screen,
             3 => &mut self.screen,
             4 => &mut self.screen,
-            5 => &mut self.file0,
-            6 => &mut self.file1,
-            7 => &mut self.mouse,
-            8 => &mut self.keyboard,
+            5 => &mut self.screen,
+            6 => &mut self.screen,
+            7 => &mut self.file0,
+            8 => &mut self.file1,
+            9 => &mut self.mouse,
+            10 => &mut self.keyboard,
             _ => unimplemented!(),
         }
     }

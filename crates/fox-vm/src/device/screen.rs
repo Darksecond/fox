@@ -68,6 +68,7 @@ pub trait Display {
     fn render(&mut self, buffer: &[u8], palette: &[u32; 16]);
 }
 
+// Palette from https://lospec.com/palette-list/sweetie-16
 const PALETTE: [u32; 16] = [
     0x1a1c2c,
     0x5d275d,
@@ -245,11 +246,11 @@ impl<D: Display> ScreenDevice<D> {
     }
 
     fn process_command(&mut self, addr: u32, dma: &mut DirectMemoryAccess<'_>) {
-        let command = dma.read_u32(addr + command::COMMAND) >> 4;
+        let command = dma.read_u8(addr + command::COMMAND) >> 4;
         match command {
-            0x00 => self.cmd_clear(addr, dma),
-            0x01 => self.cmd_sprite1(addr, dma),
-            0x02 => self.cmd_sprite4(addr, dma),
+            command::COMMAND_CLEAR => self.cmd_clear(addr, dma),
+            command::COMMAND_SPRITE1 => self.cmd_sprite1(addr, dma),
+            command::COMMAND_SPRITE4 => self.cmd_sprite4(addr, dma),
             _ => unimplemented!(),
         }
     }
